@@ -1,0 +1,12 @@
+# ckpool : serveur de minage ("pool" solo) pour relier un mineur ASIC a un noeud Radthal.
+# Meme recette que celle du createur du projet (compilation de ckpool, branche principale).
+#
+#   docker build -t ckpool -f mining/Dockerfile.ckpool mining
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential yasm autoconf automake libtool pkgconf git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /ckpool
+RUN git clone --depth 1 https://bitbucket.org/ckolivas/ckpool.git . \
+ && ./autogen.sh && ./configure && make -j2
+CMD ["/ckpool/src/ckpool", "-B", "-c", "/ckpool.conf"]

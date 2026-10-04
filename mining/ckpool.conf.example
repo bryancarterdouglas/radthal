@@ -1,0 +1,8 @@
+{
+"btcd": [{"url": "127.0.0.1:8332", "auth": "radthal", "pass": "MOT_DE_PASSE_RPC", "notify": false}],
+"btcaddress": "rdt1_TON_ADRESSE",
+"serverurl": ["0.0.0.0:3333"],
+"mindiff": 1,
+"startdiff": 42,
+"logdir": "/ckpool/logs"
+}

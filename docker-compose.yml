@@ -1,0 +1,45 @@
+# Noeud complet Radthal.
+#   1) cp env.example .env   puis edite .env
+#   2) docker compose up -d --build
+services:
+  radthal:
+    build:
+      context: .
+      args:
+        JOBS: ${BUILD_JOBS:-2}
+    image: radthal:latest
+    restart: unless-stopped
+    stop_grace_period: 60s
+    ports:
+      - "9333:9333"            # seul port ouvert : le reseau P2P. Le RPC reste prive.
+    volumes:
+      - radthal-data:/data
+    command:
+      - bitcoind
+      - -datadir=/data
+      - -printtoconsole
+      - -dnsseed=0             # pas de serveurs DNS : Radthal n'en a pas (pour l'instant)
+      - -fixedseeds=0
+      - -addnode=${SEED_NODE:?Renseigne SEED_NODE dans le fichier .env (voir env.example)}
+
+  # Surveillance : alerte si la chaine se bloque, est reecrite, se divise, ou si le noeud est isole.
+  # Elle partage le reseau du noeud (aucun port a ouvrir) et lit son cookie RPC en lecture seule.
+  watch:
+    image: python:3.12-alpine
+    restart: unless-stopped
+    network_mode: "service:radthal"
+    depends_on:
+      - radthal
+    user: "1000:1000"
+    volumes:
+      - ./watch/radthal_watch.py:/app/radthal_watch.py:ro
+      - radthal-data:/data:ro
+    environment:
+      RPC_URL: http://127.0.0.1:8332
+      RPC_COOKIE: /data/.cookie
+      NTFY_URL: ${NTFY_URL:-}
+      STALL_MINUTES: ${STALL_MINUTES:-120}
+    command: ["python", "-u", "/app/radthal_watch.py"]
+
+volumes:
+  radthal-data:
