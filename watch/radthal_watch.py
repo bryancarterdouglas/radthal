@@ -28,6 +28,7 @@ Variables d'environnement (toutes facultatives) :
   REORG_ALERT_DEPTH  alerte si au moins ... blocs remplaces  (defaut 2)
   FORK_ALERT_LEN     alerte si branche d'au moins ... blocs  (defaut 2)
   HEARTBEAT_MINUTES  ligne d'etat dans les logs              (defaut 60)
+  TIPS_CHECK_MINUTES recherche des branches concurrentes     (defaut 10)
 
 Options : --test-notify (envoie une notification de test)  --once (un seul controle)
 """
@@ -43,6 +44,7 @@ import urllib.request
 
 WINDOW = 500          # nombre de blocs recents gardes en memoire pour detecter une reorg
 START_WINDOW = 50     # au demarrage on n'en charge que 50
+RECENT = 1000         # on ne s'interesse qu'aux branches des 1000 derniers blocs
 
 
 class RpcError(Exception):
@@ -128,18 +130,20 @@ def fmt_dur(seconds):
 
 
 class Watcher:
-    def __init__(self, rpc, notify, cfg, clock=time.time, log=None):
+    def __init__(self, rpc, notify, cfg, clock=time.time, log=None, mono=time.monotonic):
         self.rpc = rpc
         self.notify = notify
         self.cfg = cfg
         self.clock = clock
+        self.mono = mono
         self.log = log or (lambda msg: print("%s %s" % (time.strftime("%Y-%m-%d %H:%M:%S"), msg), flush=True))
         self.tip_h = None
         self.tip_hash = None
         self.chain = {}            # hauteur -> hash (chaine active recente)
         self.last_change = None    # moment ou le dernier bloc est apparu
         self.active = {}           # alertes en cours : cle -> debut
-        self.seen_tips = set()
+        self.seen_tips = {}        # hash -> hauteur, seulement les branches recentes
+        self.next_tips_check = 0.0
         self.reorg_old_tips = set()
         self.max_reorg = 0
         self.rpc_fails = 0
@@ -190,7 +194,7 @@ class Watcher:
                 self.on_new_tip(h, tip, now)
             self.check_stall(info, h, now)
             self.check_peers(now)
-            self.check_forks(h)
+            self.check_forks(h, now)
         except (RpcError, OSError, ValueError) as e:
             self.log("controle interrompu (on reessaie au prochain tour) : %s" % e)
             return
@@ -203,10 +207,12 @@ class Watcher:
         hdr = self.rpc("getblockheader", tip)
         self.tip_h, self.tip_hash = h, tip
         self.last_change = min(hdr.get("time", now), now)
+        t0 = self.mono()
         tips = self.rpc("getchaintips")
-        self.seen_tips = set(t["hash"] for t in tips)
+        self._schedule_tips_check(now, self.mono() - t0)
+        self.seen_tips = dict((t["hash"], t["height"]) for t in tips if t["height"] >= h - RECENT)
         forks = [t for t in tips if t["status"] in ("valid-fork", "invalid")]
-        self.log("surveillance demarree : hauteur %d, %d branche(s) deja connue(s) ignoree(s)" % (h, len(forks)))
+        self.log("surveillance demarree : hauteur %d, %d ancienne(s) branche(s) ignoree(s)" % (h, len(forks)))
 
     def _agrees(self, height):
         return self.rpc("getblockhash", height) == self.chain.get(height)
@@ -286,15 +292,26 @@ class Watcher:
             self.nopeer_since = None
             self.clear("nopeer", "noeud reconnecte", "%d connexion(s)." % self.conns)
 
-    def check_forks(self, h):
-        for t in self.rpc("getchaintips"):
-            hsh = t["hash"]
-            if hsh in self.seen_tips:
-                continue
-            self.seen_tips.add(hsh)
-            status, blen, th = t["status"], t.get("branchlen", 0), t["height"]
-            if hsh in self.reorg_old_tips or th < h - 1000:
-                continue                              # deja signale par l'alerte de reorg / trop ancien
+    def _schedule_tips_check(self, now, elapsed):
+        # La liste des branches peut etre enorme (restes des premiers blocs) : on ne la demande
+        # que toutes les TIPS_CHECK_MINUTES, et jamais plus de 1 % du temps.
+        self.next_tips_check = now + max(self.cfg["tips_min"] * 60, 100 * elapsed)
+
+    def check_forks(self, h, now):
+        if now < self.next_tips_check:
+            return
+        t0 = self.mono()
+        tips = self.rpc("getchaintips")
+        self._schedule_tips_check(now, self.mono() - t0)
+        # on ne garde en memoire que les branches recentes
+        self.seen_tips = dict((k, v) for k, v in self.seen_tips.items() if v >= h - RECENT)
+        for t in tips:
+            hsh, status, blen, th = t["hash"], t["status"], t.get("branchlen", 0), t["height"]
+            if th < h - RECENT or hsh in self.seen_tips:
+                continue                              # ancienne branche, ou deja vue
+            self.seen_tips[hsh] = th
+            if hsh in self.reorg_old_tips:
+                continue                              # deja signale par l'alerte de reorg
             if status == "valid-fork" and blen >= self.cfg["fork_len"]:
                 self.emit(4, "branche concurrente de %d blocs" % blen,
                           "Une branche valide de %d blocs (hauteur %d) existe a cote de la chaine "
@@ -329,6 +346,7 @@ def main(argv):
         "reorg_depth": int(env_num("REORG_ALERT_DEPTH", 2)),
         "fork_len": int(env_num("FORK_ALERT_LEN", 2)),
         "heartbeat_min": env_num("HEARTBEAT_MINUTES", 60),
+        "tips_min": env_num("TIPS_CHECK_MINUTES", 10),
     }
     poll = env_num("POLL_SECONDS", 30)
     name = os.environ.get("WATCH_NAME", "Radthal")

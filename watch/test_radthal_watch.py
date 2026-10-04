@@ -28,6 +28,7 @@ class FakeChain:
         self.conns = 3
         self.ibd = False
         self.down = False
+        self.tips_calls = 0
         g = self._new(None, 0)
         self.active.append(g)
         self.mine(length - 1)
@@ -79,6 +80,7 @@ class FakeChain:
         return self.conns
 
     def rpc_getchaintips(self):
+        self.tips_calls += 1
         children = set(p for (_, p) in self.blocks.values() if p)
         tips = []
         for hsh, (height, prev) in self.blocks.items():
@@ -108,7 +110,7 @@ class Clock:
         self.t += minutes * 60
 
 
-CFG = {"stall_min": 120, "nopeer_min": 15, "reorg_depth": 2, "fork_len": 2, "heartbeat_min": 60}
+CFG = {"stall_min": 120, "nopeer_min": 15, "reorg_depth": 2, "fork_len": 2, "heartbeat_min": 60, "tips_min": 10}
 
 
 class Base(unittest.TestCase):
@@ -153,6 +155,8 @@ class TestWatcher(Base):
         self.chain.reorg(3, 4)
         self.w.poll()
         self.w.poll()
+        self.clock.advance(11)                        # le controle des branches a lieu apres
+        self.w.poll()
         self.assertEqual(len(self.alerts), 1, self.alerts)
         prio, title, _ = self.alerts[0]
         self.assertEqual(prio, 4)
@@ -192,21 +196,60 @@ class TestWatcher(Base):
 
     def test_competing_branch_alert(self):
         self.chain.side_branch(100, 3)
+        self.clock.advance(11)
         self.w.poll()
         self.assertEqual(self.titles(), ["branche concurrente de 3 blocs"])
+        self.clock.advance(11)
         self.w.poll()
         self.assertEqual(len(self.alerts), 1)         # une seule fois
 
     def test_short_branch_ignored(self):
         self.chain.side_branch(100, 1)
+        self.clock.advance(11)
         self.w.poll()
         self.assertEqual(self.alerts, [])
 
     def test_invalid_block_alert(self):
         tip = self.chain.side_branch(100, 1)
         self.chain.invalid.add(tip)
+        self.clock.advance(11)
         self.w.poll()
         self.assertEqual(self.titles(), ["bloc invalide rejete"])
+
+    def test_chaintips_not_requested_at_every_poll(self):
+        before = self.chain.tips_calls
+        for _ in range(10):
+            self.clock.advance(0.5)                    # 30 s
+            self.w.poll()
+        self.assertEqual(self.chain.tips_calls, before)
+        self.clock.advance(10)
+        self.w.poll()
+        self.assertEqual(self.chain.tips_calls, before + 1)
+
+    def test_chaintips_backoff_when_node_is_slow(self):
+        state = {"t": 0.0}
+        chain = FakeChain()
+        orig = chain.rpc_getchaintips
+
+        def slow():
+            state["t"] += 20                           # le noeud met 20 s a repondre
+            return orig()
+        chain.rpc_getchaintips = slow
+        w = rw.Watcher(chain, lambda *a: None, dict(CFG), clock=self.clock,
+                       log=lambda m: None, mono=lambda: state["t"])
+        w.poll()
+        self.assertGreaterEqual(w.next_tips_check - self.clock(), 2000)   # 100 x 20 s
+
+    def test_old_branches_are_not_kept_in_memory(self):
+        chain = FakeChain(length=1500)
+        chain.side_branch(100, 5)                      # vieille branche, bien avant les 1000 derniers blocs
+        alerts = []
+        w = rw.Watcher(chain, lambda p, t, b: alerts.append(t), dict(CFG), clock=self.clock, log=lambda m: None)
+        w.poll()
+        self.assertEqual(len(w.seen_tips), 1)          # seulement la chaine active
+        self.clock.advance(11)
+        w.poll()
+        self.assertEqual(alerts, [])
 
     def test_stall_alert_and_recovery(self):
         self.clock.advance(121)

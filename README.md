@@ -97,7 +97,7 @@ docker compose exec radthal radthal-cli -rpcwallet=monportefeuille gettransactio
 
 ## Surveillance et alertes
 
-Le service `watch` du `docker-compose.yml` démarre avec le nœud. Il vérifie toutes les 30 secondes et signale dans les logs
+Le service `watch` du `docker-compose.yml` démarre avec le nœud. Il vérifie toutes les 30 secondes (les branches concurrentes, toutes les 10 minutes) et signale dans les logs
 (`docker compose logs -f watch`) :
 
 - **plus de nouveau bloc** depuis `STALL_MINUTES` (120 par défaut) : le mineur est éteint, ckpool est planté…
