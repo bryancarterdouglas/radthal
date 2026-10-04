@@ -1,0 +1,15 @@
+Salut ! Je fais tourner ma propre crypto expérimentale, Radthal (un clone de Bitcoin, sans aucune valeur, juste pour apprendre). Si tu veux essayer de lancer un nœud et rejoindre le réseau :
+
+https://github.com/bryancarterdouglas/radthal
+
+Il faut une machine Linux (PC ou Raspberry Pi) avec Docker. Trois commandes :
+
+git clone https://github.com/bryancarterdouglas/radthal.git
+cd radthal && cp env.example .env
+docker compose up -d --build
+
+La première fois, la compilation prend un moment (de 20 min à plus d'une heure). Ensuite, pour vérifier :
+
+docker compose exec radthal radthal-cli getconnectioncount
+
+Ça doit afficher 1 ou plus. Tout est expliqué dans le README. Dis-moi si ça marche ou si tu bloques quelque part !
