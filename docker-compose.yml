@@ -39,6 +39,7 @@ services:
       RPC_COOKIE: /data/.cookie
       NTFY_URL: ${NTFY_URL:-}
       STALL_MINUTES: ${STALL_MINUTES:-120}
+      TIPS_CHECK_MINUTES: ${TIPS_CHECK_MINUTES:-10}
     command: ["python", "-u", "/app/radthal_watch.py"]
 
 volumes:

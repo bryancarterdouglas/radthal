@@ -97,7 +97,7 @@ docker compose exec radthal radthal-cli -rpcwallet=monportefeuille gettransactio
 
 ## Surveillance et alertes
 
-Le service `watch` du `docker-compose.yml` démarre avec le nœud. Il vérifie toutes les 30 secondes (les branches concurrentes, toutes les 10 minutes) et signale dans les logs
+Le service `watch` du `docker-compose.yml` démarre avec le nœud. Il vérifie toutes les 30 secondes (les branches concurrentes, toutes les 10 minutes si `TIPS_CHECK_MINUTES` est supérieur à 0 dans `.env`) et signale dans les logs
 (`docker compose logs -f watch`) :
 
 - **plus de nouveau bloc** depuis `STALL_MINUTES` (120 par défaut) : le mineur est éteint, ckpool est planté…
@@ -112,6 +112,12 @@ deviner (par exemple `radthal-3fa9c21b7d40`, c'est public : toute personne qui c
 ```bash
 docker compose exec watch python /app/radthal_watch.py --test-notify
 ```
+
+La recherche des branches concurrentes demande au nœud la liste de **toutes** ses branches mortes. Sur un nœud neuf, elle est
+minuscule et `TIPS_CHECK_MINUTES=10` est parfait. Sur un nœud qui a miné ses premiers blocs à difficulté 1 (des milliers de blocs
+par seconde), elle peut compter des centaines de milliers de lignes, et chaque demande fait grossir la mémoire du nœud d'environ
+300 Mo sans jamais la rendre : mets alors `TIPS_CHECK_MINUTES=0`. Le script se désactive aussi tout seul au-delà de 2000 branches.
+L'alerte « chaîne réécrite » n'en dépend pas.
 
 Le script (`watch/radthal_watch.py`, sans dépendance) et ses tests (`python3 -m unittest watch/test_radthal_watch.py`) sont dans ce
 dépôt. La surveillance **prévient**, elle n'empêche rien : face à une vraie attaque, il faut plus de puissance de minage honnête.
