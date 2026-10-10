@@ -251,6 +251,54 @@ class TestWatcher(Base):
         w.poll()
         self.assertEqual(alerts, [])
 
+    def test_chaintips_never_requested_when_disabled(self):
+        chain = FakeChain()
+        logs = []
+        cfg = dict(CFG, tips_min=0)                    # recherche des branches desactivee
+        w = rw.Watcher(chain, lambda *a: None, cfg, clock=self.clock, log=logs.append)
+        w.poll()
+        chain.side_branch(100, 3)
+        for _ in range(5):
+            self.clock.advance(30)
+            w.poll()
+        self.assertEqual(chain.tips_calls, 0)
+        self.assertTrue(any("desactivee" in m for m in logs))
+
+    def test_chaintips_missing_from_config_means_disabled(self):
+        chain = FakeChain()
+        cfg = dict(CFG)
+        del cfg["tips_min"]
+        w = rw.Watcher(chain, lambda *a: None, cfg, clock=self.clock, log=lambda m: None)
+        w.poll()
+        self.clock.advance(60)
+        w.poll()
+        self.assertEqual(chain.tips_calls, 0)
+
+    def test_huge_branch_list_switches_the_search_off(self):
+        chain = FakeChain()
+        for i in range(10):
+            chain.side_branch(50 + i, 1)               # 10 branches mortes
+        logs = []
+        w = rw.Watcher(chain, lambda *a: None, dict(CFG, tips_max=5), clock=self.clock, log=logs.append)
+        w.poll()
+        self.assertEqual(chain.tips_calls, 1)          # une seule demande, jamais plus
+        self.assertTrue(w.tips_off)
+        self.assertTrue(any("desactivee" in m for m in logs))
+        for _ in range(5):
+            self.clock.advance(30)
+            w.poll()
+        self.assertEqual(chain.tips_calls, 1)
+
+    def test_normal_branch_list_keeps_the_search_on(self):
+        chain = FakeChain()
+        chain.side_branch(100, 1)
+        w = rw.Watcher(chain, lambda *a: None, dict(CFG, tips_max=5), clock=self.clock, log=lambda m: None)
+        w.poll()
+        self.assertFalse(w.tips_off)
+        self.clock.advance(11)
+        w.poll()
+        self.assertEqual(chain.tips_calls, 2)
+
     def test_stall_alert_and_recovery(self):
         self.clock.advance(121)
         self.w.poll()

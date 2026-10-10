@@ -28,7 +28,16 @@ Variables d'environnement (toutes facultatives) :
   REORG_ALERT_DEPTH  alerte si au moins ... blocs remplaces  (defaut 2)
   FORK_ALERT_LEN     alerte si branche d'au moins ... blocs  (defaut 2)
   HEARTBEAT_MINUTES  ligne d'etat dans les logs              (defaut 60)
-  TIPS_CHECK_MINUTES recherche des branches concurrentes     (defaut 10)
+  TIPS_CHECK_MINUTES recherche des branches concurrentes, toutes les ... minutes
+                     (defaut 0 = desactivee, 10 conseille sur un noeud neuf)
+  TIPS_MAX_BRANCHES  au-dela de ... branches dans la liste, la recherche
+                     se desactive d'elle-meme                (defaut 2000)
+
+Pourquoi la recherche des branches est facultative : elle utilise la commande getchaintips,
+qui renvoie TOUTES les branches mortes que le noeud a un jour vues. Sur un noeud qui a mine
+ses premiers blocs a difficulte 1, ca peut faire des centaines de milliers de lignes : chaque
+appel ajoute alors environ 300 Mo a la memoire du noeud, qu'il ne rend pas. Un noeud normal
+n'a presque aucune branche morte et peut l'activer sans risque.
 
 Options : --test-notify (envoie une notification de test)  --once (un seul controle)
 """
@@ -144,6 +153,7 @@ class Watcher:
         self.active = {}           # alertes en cours : cle -> debut
         self.seen_tips = {}        # hash -> hauteur, seulement les branches recentes
         self.next_tips_check = 0.0
+        self.tips_off = False      # passe a True si la liste des branches est trop grosse
         self.reorg_old_tips = set()
         self.max_reorg = 0
         self.rpc_fails = 0
@@ -207,12 +217,13 @@ class Watcher:
         hdr = self.rpc("getblockheader", tip)
         self.tip_h, self.tip_hash = h, tip
         self.last_change = min(hdr.get("time", now), now)
-        t0 = self.mono()
-        tips = self.rpc("getchaintips")
-        self._schedule_tips_check(now, self.mono() - t0)
-        self.seen_tips = dict((t["hash"], t["height"]) for t in tips if t["height"] >= h - RECENT)
-        forks = [t for t in tips if t["status"] in ("valid-fork", "invalid")]
-        self.log("surveillance demarree : hauteur %d, %d ancienne(s) branche(s) ignoree(s)" % (h, len(forks)))
+        if self._tips_enabled():
+            tips = self._fetch_tips(now)
+            self.seen_tips = dict((t["hash"], t["height"]) for t in tips if t["height"] >= h - RECENT)
+            forks = [t for t in tips if t["status"] in ("valid-fork", "invalid")]
+            self.log("surveillance demarree : hauteur %d, %d ancienne(s) branche(s) ignoree(s)" % (h, len(forks)))
+        else:
+            self.log("surveillance demarree : hauteur %d (recherche des branches concurrentes desactivee)" % h)
 
     def _agrees(self, height):
         return self.rpc("getblockhash", height) == self.chain.get(height)
@@ -297,12 +308,25 @@ class Watcher:
         # que toutes les TIPS_CHECK_MINUTES, et jamais plus de 1 % du temps.
         self.next_tips_check = now + max(self.cfg["tips_min"] * 60, 100 * elapsed)
 
-    def check_forks(self, h, now):
-        if now < self.next_tips_check:
-            return
+    def _tips_enabled(self):
+        return self.cfg.get("tips_min", 0) > 0 and not self.tips_off
+
+    def _fetch_tips(self, now):
+        """Demande la liste des branches. Appel couteux : voir TIPS_CHECK_MINUTES en haut du fichier."""
         t0 = self.mono()
         tips = self.rpc("getchaintips")
         self._schedule_tips_check(now, self.mono() - t0)
+        limit = self.cfg.get("tips_max", 2000)
+        if len(tips) > limit:
+            self.tips_off = True
+            self.log("la liste contient %d branches (plus de %d) : recherche des branches concurrentes "
+                     "desactivee, chaque demande ferait grossir la memoire du noeud." % (len(tips), limit))
+        return tips
+
+    def check_forks(self, h, now):
+        if not self._tips_enabled() or now < self.next_tips_check:
+            return
+        tips = self._fetch_tips(now)
         # on ne garde en memoire que les branches recentes
         self.seen_tips = dict((k, v) for k, v in self.seen_tips.items() if v >= h - RECENT)
         for t in tips:
@@ -346,7 +370,8 @@ def main(argv):
         "reorg_depth": int(env_num("REORG_ALERT_DEPTH", 2)),
         "fork_len": int(env_num("FORK_ALERT_LEN", 2)),
         "heartbeat_min": env_num("HEARTBEAT_MINUTES", 60),
-        "tips_min": env_num("TIPS_CHECK_MINUTES", 10),
+        "tips_min": env_num("TIPS_CHECK_MINUTES", 0),
+        "tips_max": int(env_num("TIPS_MAX_BRANCHES", 2000)),
     }
     poll = env_num("POLL_SECONDS", 30)
     name = os.environ.get("WATCH_NAME", "Radthal")
