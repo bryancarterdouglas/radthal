@@ -20,6 +20,7 @@ et sa propre chaîne. Ce dépôt permet à **n'importe qui de faire tourner un n
 | Hash du genesis | `00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198` |
 | Merkle root du genesis | `2ee4c2f3be7d69f29ad3245f440a3af80cb3a290b6c2390b84ae82b680ab0c1e` |
 | Différences de consensus | BIP34 actif dès le bloc 17 ; SegWit et Taproot actifs dès le départ ; pas de « travail minimum » ni de bloc de confiance préconfigurés |
+| Point de contrôle | bloc **20 300**, hash `000000000000011f952520848001cef3f59c00afe6539290469827aefc1e77c3` (voir [Protection contre la réécriture](#protection-contre-la-réécriture-point-de-contrôle)) |
 
 Le fichier `radthal.patch` fait foi : il contient toutes les modifications par rapport à Bitcoin Core v31.1.
 
@@ -121,6 +122,28 @@ L'alerte « chaîne réécrite » n'en dépend pas.
 
 Le script (`watch/radthal_watch.py`, sans dépendance) et ses tests (`python3 -m unittest watch/test_radthal_watch.py`) sont dans ce
 dépôt. La surveillance **prévient**, elle n'empêche rien : face à une vraie attaque, il faut plus de puissance de minage honnête.
+
+## Protection contre la réécriture (point de contrôle)
+
+Bitcoin Core a retiré ses points de contrôle (checkpoints) ; `radthal.patch` en remet un, sous sa forme la plus simple : le bloc
+**20 300** doit avoir exactement le hash du tableau ci-dessus, et une fois ce bloc connu, plus aucune branche ne peut se greffer
+sous lui. Une chaîne concurrente, même bien plus puissante, qui ne passe pas par ce bloc ne peut donc plus réécrire l'historique
+d'avant. Elle peut encore réécrire ce qui vient après : le point de contrôle protège le passé, pas les derniers blocs.
+
+À savoir :
+
+- **Il ne protège que les nœuds qui ont cette version.** Un nœud plus ancien suivrait toujours la chaîne d'un attaquant : mets à jour
+  (`git pull && docker compose up -d --build`).
+- **C'est une règle de confiance** : le créateur du projet choisit quel bloc fait foi. C'est assumé pour une petite chaîne.
+- Les en-têtes que ton nœud connaît déjà ne sont jamais revérifiés, une mise à jour ne touche donc pas à ta chaîne existante.
+- Pour l'avancer plus tard : changer `RADTHAL_CHECKPOINT_HEIGHT` et `RADTHAL_CHECKPOINT_HASH` dans `radthal.patch` (fichier
+  `src/validation.cpp`) et recompiler. Choisis un bloc enterré sous au moins 100 blocs, jamais un des tout derniers.
+
+Vérifier que ton nœud est sur la bonne chaîne à cet endroit (doit afficher le hash du tableau) :
+
+```bash
+docker compose exec radthal radthal-cli getblockhash 20300
+```
 
 ## Aider le réseau : ouvrir le port 9333
 

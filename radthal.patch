@@ -114,3 +114,39 @@ index 64809a7..d412b26 100644
  
          vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
  
+diff --git a/src/validation.cpp b/src/validation.cpp
+index d3cabe4..aa06829 100644
+--- a/src/validation.cpp
++++ b/src/validation.cpp
+@@ -4112,6 +4112,14 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
+     return total_work;
+ }
+ 
++/** Radthal : point de controle (les checkpoints ont ete retires de Bitcoin Core, on remet la regle simple d'origine).
++ *  Un bloc a cette hauteur doit avoir exactement ce hash, et une fois ce bloc connu, aucune nouvelle branche ne peut
++ *  se greffer sous lui : une chaine, meme plus puissante, qui ne passe pas par ce bloc ne peut plus reecrire
++ *  l'historique d'avant. Pour l'avancer plus tard : changer ces deux valeurs et recompiler.
++ *  Ne concerne que le reseau principal ; les en-tetes deja connus ne sont jamais revalides. */
++static constexpr int RADTHAL_CHECKPOINT_HEIGHT{20300};
++static const uint256 RADTHAL_CHECKPOINT_HASH{"000000000000011f952520848001cef3f59c00afe6539290469827aefc1e77c3"};
++
+ /** Context-dependent validity checks.
+  *  By "context", we mean only the previous block headers, but not the UTXO
+  *  set; UTXO-related validity checks are done in ConnectBlock().
+@@ -4136,6 +4144,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
+     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
+ 
++    // Radthal : respect du point de controle (voir RADTHAL_CHECKPOINT_HEIGHT plus haut)
++    if (chainman.GetParams().GetChainType() == ChainType::MAIN) {
++        if (nHeight == RADTHAL_CHECKPOINT_HEIGHT && block.GetHash() != RADTHAL_CHECKPOINT_HASH) {
++            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-checkpoint", "block does not match the checkpoint");
++        }
++        if (nHeight < RADTHAL_CHECKPOINT_HEIGHT && blockman.LookupBlockIndex(RADTHAL_CHECKPOINT_HASH) != nullptr) {
++            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-fork-prior-to-checkpoint", "forked chain older than the checkpoint");
++        }
++    }
++
+     // Check timestamp against prev
+     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
