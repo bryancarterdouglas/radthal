@@ -34,6 +34,7 @@ rpcpassword=CHOISIS-UN-LONG-MOT-DE-PASSE
 dnsseed=0
 fixedseeds=0
 addnode=ADRESSE_DU_NOEUD:9333
+maxtipage=315360000
 CONF
 sudo chown -R 1000:1000 ~/radthal-data && sudo chmod 600 ~/radthal-data/bitcoin.conf
 ```
@@ -88,6 +89,14 @@ Quand le mineur trouve un bloc, `docker logs ckpool` affiche `BLOCK ACCEPTED`.
 
 ## À savoir
 
+- **La ligne `maxtipage=315360000` est indispensable pour un mineur.** Bitcoin Core se croit « en synchronisation initiale » dès
+  que son dernier bloc a plus de 24 heures, et dans ce cas il refuse de fournir du travail à ckpool (message
+  `Bitcoin Core is in initial sync and waiting for blocks...` puis `No bitcoinds active!`). Sur Bitcoin ça n'arrive jamais ; sur
+  une petite chaîne, une coupure de courant ou un mineur éteint plus d'un jour suffit, et personne ne peut plus miner le bloc
+  suivant. Cette ligne désactive ce blocage. Si ton nœud tourne déjà sans elle : ajoute-la au `bitcoin.conf`, puis
+  `docker restart -t 120 radthal` (et `docker restart ckpool` si les mineurs ne reviennent pas tout seuls).
+- Après un long arrêt, la difficulté ne change pas tout de suite : elle ne se réajuste qu'au prochain palier de 2016 blocs, et
+  baissera alors un peu, puisque la période aura paru lente.
 - La difficulté s'ajuste tous les 2016 blocs, comme Bitcoin : un petit mineur peut attendre longtemps avant de trouver un bloc
   tant que la difficulté est élevée. C'est du minage en loterie.
 - Les blocs minés ne sont dépensables qu'après 100 confirmations (règle de Bitcoin).
