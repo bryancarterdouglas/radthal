@@ -283,12 +283,20 @@ class Watcher:
                       "Un autre mineur plus puissant, ou un probleme de ton cote ?" % (label, where, h))
 
     def check_stall(self, info, h, now):
-        if info.get("initialblockdownload"):
+        ibd = bool(info.get("initialblockdownload"))
+        # Un noeud qui rattrape vraiment la chaine (des en-tetes en avance sur les blocs) n'est pas bloque.
+        if ibd and info.get("headers", h) > h:
             return
         age = now - self.last_change
         if age > self.cfg["stall_min"] * 60:
-            self.raise_("stall", 4, "plus de nouveau bloc depuis %s" % fmt_dur(age),
-                        "Dernier bloc : hauteur %d. Le mineur est-il allume ? ckpool tourne-t-il ?" % h)
+            body = "Dernier bloc : hauteur %d. Le mineur est-il allume ? ckpool tourne-t-il ?" % h
+            if ibd:
+                # Cas d'une chaine arretee plus de 24 h (coupure de courant...) : le dernier bloc est juge trop
+                # vieux, le noeud se croit en synchronisation initiale et refuse de fournir du travail aux mineurs.
+                body += (" Le noeud se croit en synchronisation initiale (dernier bloc trop vieux) et ne donne "
+                         "plus de travail aux mineurs : ajoute maxtipage=315360000 dans bitcoin.conf puis "
+                         "redemarre le noeud.")
+            self.raise_("stall", 4, "plus de nouveau bloc depuis %s" % fmt_dur(age), body)
 
     def check_peers(self, now):
         self.conns = self.rpc("getconnectioncount")

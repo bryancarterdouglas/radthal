@@ -27,6 +27,7 @@ class FakeChain:
         self.invalid = set()
         self.conns = 3
         self.ibd = False
+        self.headers_ahead = 0      # en-tetes connus mais blocs pas encore telecharges
         self.down = False
         self.tips_calls = 0
         g = self._new(None, 0)
@@ -65,6 +66,7 @@ class FakeChain:
 
     def rpc_getblockchaininfo(self):
         return {"blocks": len(self.active) - 1, "bestblockhash": self.active[-1],
+                "headers": len(self.active) - 1 + self.headers_ahead,
                 "initialblockdownload": self.ibd}
 
     def rpc_getblockhash(self, h):
@@ -323,11 +325,29 @@ class TestWatcher(Base):
         self.w.poll()
         self.assertEqual(self.alerts, [])
 
-    def test_no_stall_alert_during_initial_block_download(self):
+    def test_no_stall_alert_while_really_catching_up(self):
         self.chain.ibd = True
+        self.chain.headers_ahead = 50                  # il reste des blocs a telecharger
         self.clock.advance(500)
         self.w.poll()
         self.assertEqual(self.alerts, [])
+
+    def test_stall_alert_when_node_thinks_it_is_syncing_but_has_nothing_to_download(self):
+        # Coupure de courant de plusieurs jours : dernier bloc trop vieux, le noeud se croit en
+        # synchronisation initiale, ne donne plus de travail aux mineurs, et plus aucun bloc n'arrive.
+        self.chain.ibd = True
+        self.clock.advance(500)
+        self.w.poll()
+        self.assertEqual(len(self.alerts), 1)
+        self.assertEqual(self.alerts[0][0], 4)
+        self.assertIn("plus de nouveau bloc", self.alerts[0][1])
+        self.assertIn("maxtipage", self.alerts[0][2])
+
+    def test_normal_stall_alert_does_not_mention_maxtipage(self):
+        self.clock.advance(500)
+        self.w.poll()
+        self.assertEqual(len(self.alerts), 1)
+        self.assertNotIn("maxtipage", self.alerts[0][2])
 
     def test_isolated_node(self):
         self.chain.conns = 0
