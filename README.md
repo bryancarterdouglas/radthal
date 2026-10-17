@@ -7,6 +7,20 @@ et sa propre chaîne. Ce dépôt permet à **n'importe qui de faire tourner un n
 > Projet de bricoleur, sans aucune garantie. Radthal n'a aucun lien avec Bitcoin ni avec les développeurs de Bitcoin Core.
 > Voir les [avertissements](#avertissements).
 
+## Pourquoi Radthal ?
+
+Sur Bitcoin, un mineur de salon n'a pratiquement aucune chance de trouver un bloc en solo : le réseau est des millions de fois plus
+puissant que lui. Radthal reprend les mêmes règles sur une chaîne neuve et minuscule, où **un seul mineur domestique compte encore** et où
+l'on peut tout observer de près : un nœud complet sur un Raspberry Pi, un serveur de minage, un portefeuille, des alertes. C'est un
+terrain d'expérience et d'apprentissage, pas un placement.
+
+Ce qu'il faut savoir avant de t'y intéresser :
+
+- **L'avantage est temporaire.** Si beaucoup de mineurs arrivent, la difficulté monte et la part de chacun baisse.
+- **Le réseau est petit, donc fragile.** Le point de contrôle protège l'historique (voir plus bas), mais il repose sur la confiance
+  dans le créateur du projet : ce n'est pas aussi décentralisé que Bitcoin.
+- **Aucune valeur, aucun marché, aucune promesse.** Radthal n'est pas un investissement et ne doit jamais être présenté comme tel.
+
 ## Paramètres du réseau
 
 | | |
@@ -156,6 +170,22 @@ portefeuille. Ouvrir le port rend ton adresse IP visible aux autres nœuds.
 Radthal utilise SHA-256, comme Bitcoin : un mineur ASIC pour Bitcoin convient. Plus il y a de mineurs honnêtes, plus la chaîne est
 difficile à réécrire. Le guide pas à pas (nœud + serveur de minage `ckpool`) est dans **[MINER.md](MINER.md)**.
 
+## L'interface (facultatif)
+
+Pour suivre le nœud et le minage sans ligne de commande, l'auteur utilise quatre petites pages web sur son Raspberry Pi
+(Umbrel) : **nœud**, **tableau de bord**, **mempool** et **ckpool**. Elles se mettent à jour toutes les 3 secondes et
+ne servent qu'à **regarder** : elles ne modifient rien. Ce sont de vraies captures d'un nœud en marche (solde et adresses
+du réseau local masqués). Les ventilateurs animés du mineur sont une illustration ; les chiffres, eux, viennent du nœud et de ckpool.
+
+| Tableau de bord | ckpool (le minage) | Nœud |
+|:---:|:---:|:---:|
+| <a href="docs/interface-tableau-de-bord.jpg"><img src="docs/interface-tableau-de-bord.jpg" width="260" alt="Tableau de bord Radthal : derniers blocs, difficulté, puissance du réseau, mon mineur"></a> | <a href="docs/interface-ckpool.jpg"><img src="docs/interface-ckpool.jpg" width="260" alt="Page ckpool : hashrate, parts acceptées, appareils, blocs trouvés"></a> | <a href="docs/interface-noeud.jpg"><img src="docs/interface-noeud.jpg" width="260" alt="Page du nœud : synchronisation, connexions, pairs, ports"></a> |
+
+(Clique sur une image pour l'agrandir.) Les fichiers sont dans le dépôt
+**[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**. Ils sont faits pour l'installation de
+l'auteur et utilisent des fichiers de son Raspberry Pi : ce n'est **pas** une installation en un clic pour tout le monde. Le nœud
+Docker de ce dépôt n'en a pas besoin.
+
 ## Nœuds connus
 
 | Adresse | Remarque |
@@ -198,6 +228,8 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 Radthal is an experimental fork of **Bitcoin Core v31.1** with Bitcoin's rules (SHA-256, 2016-block difficulty retarget,
 10-minute target, 210,000-block halving) on its own chain. This repository builds a full node with Docker:
 `cp env.example .env`, set `SEED_NODE` to a running node, then `docker compose up -d --build`.
+On Bitcoin, a home miner has practically no chance of finding a block solo; on this tiny new chain a single home miner still matters
+(for as long as few people mine), which makes it a hands-on learning playground, not an investment.
 P2P port **9333**; never expose the RPC port. Genesis hash:
 `00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198`. Experimental software, no warranty, no affiliation with Bitcoin.
 
