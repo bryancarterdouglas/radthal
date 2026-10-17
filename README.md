@@ -14,6 +14,8 @@ puissant que lui. Radthal reprend les mêmes règles sur une chaîne neuve et mi
 l'on peut tout observer de près : un nœud complet sur un Raspberry Pi, un serveur de minage, un portefeuille, des alertes. C'est un
 terrain d'expérience et d'apprentissage, pas un placement.
 
+Pour comprendre le principe en images : la [vidéo de présentation](https://youtu.be/20HJ0tP18fI) (voix générée par ordinateur).
+
 Ce qu'il faut savoir avant de t'y intéresser :
 
 - **L'avantage est temporaire.** Si beaucoup de mineurs arrivent, la difficulté monte et la part de chacun baisse.
@@ -45,6 +47,9 @@ Le fichier `radthal.patch` fait foi : il contient toutes les modifications par r
 - Une connexion internet. La chaîne est encore toute petite : la synchronisation prend quelques minutes.
 
 ## Installation
+
+Première fois sur Linux ? Le [tutoriel vidéo pour débutant](https://youtu.be/NB6UsRZOKIE) (Linux, Umbrel, Docker, GitHub) montre
+toutes les étapes ci-dessous, une par une.
 
 ```bash
 git clone https://github.com/bryancarterdouglas/radthal.git
@@ -232,5 +237,6 @@ On Bitcoin, a home miner has practically no chance of finding a block solo; on t
 (for as long as few people mine), which makes it a hands-on learning playground, not an investment.
 P2P port **9333**; never expose the RPC port. Genesis hash:
 `00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198`. Experimental software, no warranty, no affiliation with Bitcoin.
+Videos (in French, computer-generated voice): [overview](https://youtu.be/20HJ0tP18fI) and [step-by-step install tutorial](https://youtu.be/NB6UsRZOKIE).
 
 Licence : MIT (voir `LICENSE`).
