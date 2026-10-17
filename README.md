@@ -66,6 +66,9 @@ docker compose up -d --build
 La première fois, Docker **compile** Bitcoin Core : compte de quelques dizaines de minutes sur un PC à plus d'une heure
 sur un Raspberry Pi. Ensuite, le démarrage est immédiat.
 
+Pas d'ordinateur sous la main ? Un téléphone Android peut aussi faire tourner un nœud qui vérifie la chaîne (il n'est pas
+joignable depuis l'extérieur) : voir **[NOEUD-TELEPHONE.md](NOEUD-TELEPHONE.md)**, procédure testée sur un seul modèle de téléphone.
+
 ## Vérifier que ça marche
 
 ```bash
