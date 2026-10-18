@@ -180,19 +180,50 @@ difficile à réécrire. Le guide pas à pas (nœud + serveur de minage `ckpool`
 
 ## L'interface (facultatif)
 
-Pour suivre le nœud et le minage sans ligne de commande, l'auteur utilise quatre petites pages web sur son Raspberry Pi
-(Umbrel) : **nœud**, **tableau de bord**, **mempool** et **ckpool**. Elles se mettent à jour toutes les 3 secondes et
-ne servent qu'à **regarder** : elles ne modifient rien. Ce sont de vraies captures d'un nœud en marche (solde et adresses
-du réseau local masqués). Les ventilateurs animés du mineur sont une illustration ; les chiffres, eux, viennent du nœud et de ckpool.
+Pour suivre et utiliser son nœud sans ligne de commande, l'auteur a six petites pages web sur son Raspberry Pi (Umbrel).
+
+**Quatre pages pour regarder** : **nœud**, **tableau de bord**, **mempool** et **ckpool**. Elles se mettent à jour toutes les
+3 secondes et ne servent qu'à **regarder** : elles ne modifient rien. Ce sont de vraies captures d'un nœud en marche (solde et
+adresses du réseau local masqués). Les ventilateurs animés du mineur sont une illustration ; les chiffres, eux, viennent du nœud et de ckpool.
 
 | Tableau de bord | ckpool (le minage) | Nœud |
 |:---:|:---:|:---:|
 | <a href="docs/interface-tableau-de-bord.jpg"><img src="docs/interface-tableau-de-bord.jpg" width="260" alt="Tableau de bord Radthal : derniers blocs, difficulté, puissance du réseau, mon mineur"></a> | <a href="docs/interface-ckpool.jpg"><img src="docs/interface-ckpool.jpg" width="260" alt="Page ckpool : hashrate, parts acceptées, appareils, blocs trouvés"></a> | <a href="docs/interface-noeud.jpg"><img src="docs/interface-noeud.jpg" width="260" alt="Page du nœud : synchronisation, connexions, pairs, ports"></a> |
 
-(Clique sur une image pour l'agrandir.) Les fichiers sont dans le dépôt
-**[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**. Ils sont faits pour l'installation de
-l'auteur et utilisent des fichiers de son Raspberry Pi : ce n'est **pas** une installation en un clic pour tout le monde. Le nœud
-Docker de ce dépôt n'en a pas besoin.
+(Clique sur une image pour l'agrandir.)
+
+**Deux pages qui agissent** : elles demandent le mot de passe du portefeuille à chaque action une fois qu'il est protégé (les clés
+restent dans le nœud, les pages ne les voient jamais) :
+
+- **Radthal Wallet** : solde, adresse de réception avec QR code, envoi de RDT (aperçu puis confirmation), historique, sauvegarde,
+  protection du portefeuille par un mot de passe (à faire avant d'envoyer quoi que ce soit) et **messages dans la chaîne**.
+- **Radthal Horodatage** : prouver qu'un document existait, sous cette forme exacte, à la date d'un bloc.
+
+L'horodatage et les messages écrivent dans la chaîne par une sortie de données (`OP_RETURN`), que le programme du nœud accepte par défaut.
+L'auteur les a essayés de bout en bout sur son propre nœud (envoi, confirmation dans un bloc, vérification).
+
+| Radthal Wallet : messages | Radthal Horodatage |
+|:---:|:---:|
+| <a href="docs/interface-portefeuille-messages.jpg"><img src="docs/interface-portefeuille-messages.jpg" width="300" alt="Radthal Wallet : écrire un message de 280 caractères au plus et lire les messages trouvés dans la chaîne"></a> | <a href="docs/interface-horodatage.jpg"><img src="docs/interface-horodatage.jpg" width="300" alt="Radthal Horodatage : horodater un document, vérifier un document, liste des horodatages avec leur certificat"></a> |
+
+(Captures du nœud de l'auteur, sur téléphone, découpées : le solde, l'adresse et le QR code du portefeuille ne sont pas montrés.)
+
+*L'horodatage.* La page calcule l'empreinte du document (SHA-256) **dans ton navigateur** ; le document ne quitte jamais ton
+appareil et seule l'empreinte (36 octets) est écrite dans la chaîne, pour environ 0,0000017 RDT de frais. Une fois le bloc trouvé, tu
+télécharges un certificat (petit fichier `.json`) : avec le document exact, il permet à quelqu'un d'autre de vérifier l'horodatage
+sur son propre nœud. Ce que ça prouve : un document identique existait au plus tard à la date du bloc. Ce que ça ne prouve pas :
+qui l'a écrit, ni l'heure exacte (l'heure d'un bloc est fixée par son mineur). La chaîne est petite et le mineur de l'auteur la fait
+avancer : pour un vrai litige, double la preuve avec un service reconnu. Changer une seule lettre du document change l'empreinte.
+
+*Les messages.* On peut écrire un court message (280 caractères au plus) dans la chaîne. **Un message est public et définitif** :
+tous ceux qui ont un nœud Radthal peuvent le lire, personne ne peut l'effacer ni le modifier. N'y mets jamais rien de personnel. La
+page affiche aussi les messages des 3 000 derniers blocs, écrits par n'importe qui : ils ne sont ni vérifiés ni modérés, et seul le
+texte est affiché (jamais de lien cliquable, d'image ni de code). Les photos et les vidéos ne passent pas : seule une petite
+quantité de texte peut être écrite.
+
+Les fichiers sont dans le dépôt **[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**. Ils sont faits pour
+l'installation de l'auteur et utilisent des fichiers de son Raspberry Pi : ce n'est **pas** une installation en un clic pour tout le
+monde. Les pages sont en HTTP sur le réseau local : ne les expose jamais sur Internet. Le nœud Docker de ce dépôt n'en a pas besoin.
 
 ## Nœuds connus
 
@@ -227,6 +258,7 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 - Radthal est un projet expérimental, sans valeur garantie. Ne promets jamais de gains à quelqu'un.
 - Une chaîne jeune avec peu de puissance de minage est fragile : un mineur plus puissant peut réécrire les derniers blocs.
 - Tu es seul responsable de tes clés et de tes sauvegardes.
+- Un message écrit dans la chaîne est public et définitif. Un horodatage Radthal ne remplace pas un service reconnu en cas de litige.
 - Aucune relation avec Bitcoin ou ses développeurs. Le code vient de [Bitcoin Core](https://github.com/bitcoin/bitcoin) (licence MIT).
 
 ---
@@ -238,6 +270,9 @@ Radthal is an experimental fork of **Bitcoin Core v31.1** with Bitcoin's rules (
 `cp env.example .env`, set `SEED_NODE` to a running node, then `docker compose up -d --build`.
 On Bitcoin, a home miner has practically no chance of finding a block solo; on this tiny new chain a single home miner still matters
 (for as long as few people mine), which makes it a hands-on learning playground, not an investment.
+Optional Umbrel web pages (author's own Raspberry Pi setup, not one-click): node, dashboard, mempool and ckpool views, plus a wallet
+with short public on-chain messages (OP_RETURN, 280 characters) and a document timestamping page (SHA-256 fingerprint computed in the
+browser, only the hash goes on-chain).
 P2P port **9333**; never expose the RPC port. Genesis hash:
 `00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198`. Experimental software, no warranty, no affiliation with Bitcoin.
 Videos (in French, computer-generated voice): [overview](https://youtu.be/20HJ0tP18fI) and [step-by-step install tutorial](https://youtu.be/NB6UsRZOKIE).
