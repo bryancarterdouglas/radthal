@@ -1,5 +1,7 @@
 # Miner Radthal en solo (ckpool)
 
+🇬🇧 [English version](MINER.en.md)
+
 Radthal se mine en SHA-256 : un mineur ASIC pour Bitcoin (Avalon, Antminer, Bitaxe…) convient. Il ne se branche pas
 directement sur le nœud : il passe par **ckpool**, un petit serveur de minage qui tourne à côté du nœud. En mode « solo »,
 quand ton mineur trouve un bloc, **98 % de la récompense vont à ton adresse** `rdt1…` et **2 % à l'adresse du créateur**

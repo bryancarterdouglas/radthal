@@ -65,11 +65,11 @@ share is taken out of the reward, nothing is added.
 - **It is public and verifiable.** The rule is in `radthal.patch` (functions `GetDevFeeAmount` and `GetDevFeeScript`): from block
   25,000 on, a block whose first transaction (the "coinbase") does not pay this share is rejected by up-to-date nodes (error
   `bad-cb-devfee`). Every affected block therefore contains an output to this address, visible in the block explorer.
-- **Update your node before block 25,000** (`git pull && docker compose up -d --build`, or the recipe in [MINER.md](MINER.md), in
-  French). A node that is not up to date also accepts blocks without this share, which up-to-date nodes reject: it would end up on a
+- **Update your node before block 25,000** (`git pull && docker compose up -d --build`, or the recipe in [MINER.en.md](MINER.en.md)).
+  A node that is not up to date also accepts blocks without this share, which up-to-date nodes reject: it would end up on a
   different chain from the rest of the network.
 - **If you mine with this repository's `ckpool`**, it pays the share by itself (it takes 2% of the total, fees included): just
-  rebuild its image (see [MINER.md](MINER.md)). An old `ckpool` would produce blocks that get rejected from block 25,000 on.
+  rebuild its image (see [MINER.en.md](MINER.en.md)). An old `ckpool` would produce blocks that get rejected from block 25,000 on.
 - **If you use other mining software**, the coinbase must contain an output to the address above of at least the required amount.
   From block 25,000 on, `getblocktemplate` gives the script and the amount in the `devfee` field, and `coinbasevalue` includes this
   share.
@@ -211,7 +211,7 @@ the port makes your IP address visible to other nodes.
 ## Mining
 
 Radthal uses SHA-256, like Bitcoin: a Bitcoin ASIC miner works. The more honest miners there are, the harder the chain is to
-rewrite. The step-by-step guide (node + `ckpool` mining server) is in **[MINER.md](MINER.md)** (in French).
+rewrite. The step-by-step guide (node + `ckpool` mining server) is in **[MINER.en.md](MINER.en.md)**.
 
 ## The interface (optional)
 
@@ -287,7 +287,7 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
 - **`docker compose` not found**: install the Compose plugin, or use `docker-compose` (with a hyphen).
 - **The node says "initial sync" although it is up to date, and no more blocks are mined**: the last block is more than 24 hours old
   (power cut, miner off…), and Bitcoin Core then refuses to hand out work to miners. Add `maxtipage=315360000` to the `bitcoin.conf`
-  of the node used for mining (see [MINER.md](MINER.md)) and restart it. The plain node of this README, which does not mine, can do
+  of the node used for mining (see [MINER.en.md](MINER.en.md)) and restart it. The plain node of this README, which does not mine, can do
   without it.
 
 ## Warnings
