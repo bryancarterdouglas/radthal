@@ -1,4 +1,8 @@
-# Radthal
+<p align="center">
+  <img src="docs/logo-radthal.png" width="220" alt="Logo Radthal : un R bleu dans un cercle bleu, entouré de perles grises et de six points rouges">
+</p>
+
+<h1 align="center">Radthal</h1>
 
 Radthal est une crypto-monnaie expérimentale : un **fork de Bitcoin Core v31.1** avec les règles de Bitcoin
 (SHA-256, ajustement de la difficulté tous les 2016 blocs, blocs de 10 minutes visés, halving tous les 210 000 blocs)
@@ -183,12 +187,12 @@ difficile à réécrire. Le guide pas à pas (nœud + serveur de minage `ckpool`
 Pour suivre et utiliser son nœud sans ligne de commande, l'auteur a six petites pages web sur son Raspberry Pi (Umbrel).
 
 **Quatre pages pour regarder** : **nœud**, **tableau de bord**, **mempool** et **ckpool**. Elles se mettent à jour toutes les
-3 secondes et ne servent qu'à **regarder** : elles ne modifient rien. Ce sont de vraies captures d'un nœud en marche (solde et
-adresses du réseau local masqués). Les ventilateurs animés du mineur sont une illustration ; les chiffres, eux, viennent du nœud et de ckpool.
+3 secondes et ne servent qu'à **regarder** : elles ne modifient rien. Ce sont de vraies captures d'un nœud en marche (solde masqué,
+adresse du réseau local remplacée). Les ventilateurs animés du mineur sont une illustration ; les chiffres, eux, viennent du nœud et de ckpool.
 
 | Tableau de bord | ckpool (le minage) | Nœud |
 |:---:|:---:|:---:|
-| <a href="docs/interface-tableau-de-bord.jpg"><img src="docs/interface-tableau-de-bord.jpg" width="260" alt="Tableau de bord Radthal : derniers blocs, difficulté, puissance du réseau, mon mineur"></a> | <a href="docs/interface-ckpool.jpg"><img src="docs/interface-ckpool.jpg" width="260" alt="Page ckpool : hashrate, parts acceptées, appareils, blocs trouvés"></a> | <a href="docs/interface-noeud.jpg"><img src="docs/interface-noeud.jpg" width="260" alt="Page du nœud : synchronisation, connexions, pairs, ports"></a> |
+| <a href="docs/interface-tableau-de-bord.jpg"><img src="docs/interface-tableau-de-bord.jpg" width="260" alt="Tableau de bord Radthal : derniers blocs, surveillance des forks, difficulté, puissance du réseau, mon mineur"></a> | <a href="docs/interface-ckpool.jpg"><img src="docs/interface-ckpool.jpg" width="260" alt="Page ckpool : mon mineur, hashrate, parts acceptées, appareils, connexion d'un mineur"></a> | <a href="docs/interface-noeud.jpg"><img src="docs/interface-noeud.jpg" width="260" alt="Page du nœud : synchronisation, connexions, pairs, ports"></a> |
 
 (Clique sur une image pour l'agrandir.)
 
