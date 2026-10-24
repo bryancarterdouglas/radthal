@@ -1,5 +1,8 @@
 # ckpool : serveur de minage ("pool" solo) pour relier un mineur ASIC a un noeud Radthal.
-# Meme recette que celle du createur du projet (compilation de ckpool, branche principale).
+# Meme recette que celle du createur du projet (compilation de ckpool, branche principale), avec une modification :
+# la "donation" de ckpool (par defaut vers son auteur) est dirigee vers l'adresse du developpeur de Radthal et fixee a 2 % au
+# minimum, comme l'exige la regle du reseau a partir du bloc 25 000 (voir README, "La part du developpeur").
+# La commande grep fait echouer la compilation si le code de ckpool a change et que la modification ne s'applique plus.
 #
 #   docker build -t ckpool -f mining/Dockerfile.ckpool mining
 FROM debian:bookworm-slim
@@ -8,5 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /ckpool
 RUN git clone --depth 1 https://bitbucket.org/ckolivas/ckpool.git . \
+ && sed -i 's|ckpool.donaddress = "bc1q28kkr5hk4gnqe3evma6runjrd2pvqyp8fpwfzu";|ckpool.donaddress = "rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6"; if (ckpool.donation < 2.0) ckpool.donation = 2.0;|' src/ckpool.c \
+ && grep -q 'ckpool.donaddress = "rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6"; if (ckpool.donation < 2.0)' src/ckpool.c \
  && ./autogen.sh && ./configure && make -j2
 CMD ["/ckpool/src/ckpool", "-B", "-c", "/ckpool.conf"]

@@ -6,7 +6,8 @@
 
 Radthal est une crypto-monnaie expérimentale : un **fork de Bitcoin Core v31.1** avec les règles de Bitcoin
 (SHA-256, ajustement de la difficulté tous les 2016 blocs, blocs de 10 minutes visés, halving tous les 210 000 blocs)
-et sa propre chaîne. Ce dépôt permet à **n'importe qui de faire tourner un nœud complet** et d'aider le réseau.
+et sa propre chaîne, avec une différence de fond : une [part de 2 % pour le créateur](#la-part-du-développeur-2-) à partir du
+bloc 25 000. Ce dépôt permet à **n'importe qui de faire tourner un nœud complet** et d'aider le réseau.
 
 > Projet de bricoleur, sans aucune garantie. Radthal n'a aucun lien avec Bitcoin ni avec les développeurs de Bitcoin Core.
 > Voir les [avertissements](#avertissements).
@@ -25,6 +26,8 @@ Ce qu'il faut savoir avant de t'y intéresser :
 - **L'avantage est temporaire.** Si beaucoup de mineurs arrivent, la difficulté monte et la part de chacun baisse.
 - **Le réseau est petit, donc fragile.** Le point de contrôle protège l'historique (voir plus bas), mais il repose sur la confiance
   dans le créateur du projet : ce n'est pas aussi décentralisé que Bitcoin.
+- **Une part de 2 % de chaque récompense va au créateur du projet à partir du bloc 25 000** (règle annoncée à l'avance, voir
+  [La part du développeur](#la-part-du-développeur-2-)).
 - **Aucune valeur, aucun marché, aucune promesse.** Radthal n'est pas un investissement et ne doit jamais être présenté comme tel.
 
 ## Paramètres du réseau
@@ -39,10 +42,37 @@ Ce qu'il faut savoir avant de t'y intéresser :
 | Bloc genesis | 2026-10-03 00:00 UTC · message « Radthal 03/Oct/2026 premier bloc » · nonce 2161066804 · récompense 50 |
 | Hash du genesis | `00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198` |
 | Merkle root du genesis | `2ee4c2f3be7d69f29ad3245f440a3af80cb3a290b6c2390b84ae82b680ab0c1e` |
-| Différences de consensus | BIP34 actif dès le bloc 17 ; SegWit et Taproot actifs dès le départ ; pas de « travail minimum » ni de bloc de confiance préconfigurés |
+| Différences de consensus | BIP34 actif dès le bloc 17 ; SegWit et Taproot actifs dès le départ ; pas de « travail minimum » ni de bloc de confiance préconfigurés ; **part du développeur de 2 % dès le bloc 25 000** |
+| Part du développeur | à partir du bloc **25 000** : 2 % de la récompense de chaque bloc vont à `rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6` (voir [La part du développeur](#la-part-du-développeur-2-)) |
 | Point de contrôle | bloc **20 300**, hash `000000000000011f952520848001cef3f59c00afe6539290469827aefc1e77c3` (voir [Protection contre la réécriture](#protection-contre-la-réécriture-point-de-contrôle)) |
 
 Le fichier `radthal.patch` fait foi : il contient toutes les modifications par rapport à Bitcoin Core v31.1.
+
+## La part du développeur (2 %)
+
+**À partir du bloc 25 000**, chaque bloc verse **2 % de sa récompense** à l'adresse du créateur du projet : 1 RDT sur les 50 RDT
+d'un bloc (la part suit ensuite les halvings). Les 98 % restants vont au mineur. La quantité de RDT créée par bloc ne change pas :
+la part est prélevée sur la récompense, rien n'est ajouté.
+
+| | |
+|---|---|
+| Début | bloc **25 000** (les blocs d'avant ne changent pas) |
+| Adresse | `rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6` |
+| Montant | au moins 2 % de la récompense du bloc (hors frais de transaction) |
+
+- **C'est public et vérifiable.** La règle est dans `radthal.patch` (fonctions `GetDevFeeAmount` et `GetDevFeeScript`) : à partir du
+  bloc 25 000, un bloc dont la première transaction (la « coinbase ») ne verse pas cette part est refusé par les nœuds à jour
+  (erreur `bad-cb-devfee`). Chaque bloc concerné contient donc une sortie vers cette adresse, visible dans l'explorateur de blocs.
+- **Mets ton nœud à jour avant le bloc 25 000** (`git pull && docker compose up -d --build`, ou la recette de [MINER.md](MINER.md)).
+  Un nœud qui n'est pas à jour accepte aussi des blocs sans cette part, que les nœuds à jour refusent : il se retrouverait sur une
+  autre chaîne que le reste du réseau.
+- **Si tu mines avec le `ckpool` de ce dépôt**, il verse la part tout seul (il prélève 2 % du total, frais compris) : il suffit de
+  reconstruire son image (voir [MINER.md](MINER.md)). Un ancien `ckpool` produirait des blocs refusés à partir du bloc 25 000.
+- **Si tu utilises un autre logiciel de minage**, la coinbase doit contenir une sortie vers l'adresse ci-dessus d'au moins le montant
+  demandé. À partir du bloc 25 000, `getblocktemplate` donne le script et le montant dans le champ `devfee`, et `coinbasevalue`
+  inclut cette part.
+- **Pas d'accord avec cette règle ?** Radthal est un logiciel libre : tu peux garder l'ancienne version, mais tu suivras alors ta
+  propre chaîne, séparée de celle-ci.
 
 ## Ce qu'il te faut
 
@@ -245,6 +275,8 @@ docker compose up -d           # redémarrage
 git pull && docker compose up -d --build     # mise à jour du dépôt
 ```
 
+**Mets à jour avant le bloc 25 000** : la [part du développeur](#la-part-du-développeur-2-) devient alors une règle du réseau, et un nœud qui n'est pas à jour se sépare des autres.
+
 Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radthal-data` et survivent aux mises à jour.
 
 ## Dépannage
@@ -270,7 +302,9 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 ## English summary
 
 Radthal is an experimental fork of **Bitcoin Core v31.1** with Bitcoin's rules (SHA-256, 2016-block difficulty retarget,
-10-minute target, 210,000-block halving) on its own chain. This repository builds a full node with Docker:
+10-minute target, 210,000-block halving) on its own chain, with one open difference: from block 25,000 on, 2% of every block reward
+goes to the creator's address `rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6` (a consensus rule, announced in advance; see the French
+section "La part du développeur"; update your node before block 25,000). This repository builds a full node with Docker:
 `cp env.example .env`, set `SEED_NODE` to a running node, then `docker compose up -d --build`.
 On Bitcoin, a home miner has practically no chance of finding a block solo; on this tiny new chain a single home miner still matters
 (for as long as few people mine), which makes it a hands-on learning playground, not an investment.

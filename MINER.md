@@ -2,7 +2,9 @@
 
 Radthal se mine en SHA-256 : un mineur ASIC pour Bitcoin (Avalon, Antminer, Bitaxe…) convient. Il ne se branche pas
 directement sur le nœud : il passe par **ckpool**, un petit serveur de minage qui tourne à côté du nœud. En mode « solo »,
-quand ton mineur trouve un bloc, **toute la récompense va à ton adresse** `rdt1…`.
+quand ton mineur trouve un bloc, **98 % de la récompense vont à ton adresse** `rdt1…` et **2 % à l'adresse du créateur**
+du projet (règle du réseau à partir du bloc 25 000, voir « La part du développeur » dans le [README](README.md)). `ckpool` s'occupe
+tout seul de ce partage.
 
 Plus il y a de mineurs honnêtes, plus la chaîne est difficile à réécrire : miner aide vraiment le réseau.
 
@@ -66,7 +68,8 @@ nano ~/ckpool.conf
 ```
 
 Dans `~/ckpool.conf`, remplace `MOT_DE_PASSE_RPC` par le mot de passe du `bitcoin.conf` et `rdt1_TON_ADRESSE` par ton adresse.
-Garde le reste tel quel. Puis :
+Garde le reste tel quel, en particulier la ligne `"donation": 2` : c'est la part du développeur, **obligatoire à partir du bloc
+25 000** (le `ckpool` de ce dépôt la force à 2 % au minimum, mais autant que le fichier le dise). Puis :
 
 ```bash
 mkdir -p ~/ckpool-logs
@@ -95,6 +98,9 @@ Quand le mineur trouve un bloc, `docker logs ckpool` affiche `BLOCK ACCEPTED`.
   une petite chaîne, une coupure de courant ou un mineur éteint plus d'un jour suffit, et personne ne peut plus miner le bloc
   suivant. Cette ligne désactive ce blocage. Si ton nœud tourne déjà sans elle : ajoute-la au `bitcoin.conf`, puis
   `docker restart -t 120 radthal` (et `docker restart ckpool` si les mineurs ne reviennent pas tout seuls).
+- **Avant le bloc 25 000 : reconstruis l'image `ckpool` et mets le nœud à jour** (`docker build -t radthal .` et
+  `docker build -t ckpool -f mining/Dockerfile.ckpool mining`, puis recrée les deux conteneurs avec les commandes ci-dessus).
+  Sans cela, tes blocs seraient refusés par les nœuds à jour à partir du bloc 25 000.
 - Après un long arrêt, la difficulté ne change pas tout de suite : elle ne se réajuste qu'au prochain palier de 2016 blocs, et
   baissera alors un peu, puisque la période aura paru lente.
 - La difficulté s'ajuste tous les 2016 blocs, comme Bitcoin : un petit mineur peut attendre longtemps avant de trouver un bloc
