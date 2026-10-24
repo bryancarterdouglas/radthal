@@ -1,5 +1,19 @@
+diff --git a/src/consensus/params.h b/src/consensus/params.h
+index 93ee071..55c4183 100644
+--- a/src/consensus/params.h
++++ b/src/consensus/params.h
+@@ -84,6 +84,9 @@ struct BIP9Deployment {
+ struct Params {
+     uint256 hashGenesisBlock;
+     int nSubsidyHalvingInterval;
++    /** Radthal : a partir de cette hauteur, chaque bloc doit verser au moins 2 % de la subvention a l'adresse du developpeur
++     *  (voir GetDevFeeAmount / GetDevFeeScript dans validation.h). INT_MAX = desactive. */
++    int devfee_start_height{std::numeric_limits<int>::max()};
+     /**
+      * Hashes of blocks that
+      * - are known to be consensus valid, and
 diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
-index 64809a7..d412b26 100644
+index 64809a7..3158275 100644
 --- a/src/kernel/chainparams.cpp
 +++ b/src/kernel/chainparams.cpp
 @@ -4,6 +4,8 @@
@@ -20,7 +34,12 @@ index 64809a7..d412b26 100644
      const CScript genesisOutputScript = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
      return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
  }
-@@ -86,13 +88,13 @@ public:
+@@ -82,17 +84,18 @@ public:
+         consensus.signet_blocks = false;
+         consensus.signet_challenge.clear();
+         consensus.nSubsidyHalvingInterval = 210000;
++        consensus.devfee_start_height = 25000; // Radthal : part du developpeur de 2 % a partir du bloc 25 000 (voir README)
+         consensus.script_flag_exceptions.emplace( // BIP16 exception
              uint256{"00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22"}, SCRIPT_VERIFY_NONE);
          consensus.script_flag_exceptions.emplace( // Taproot exception
              uint256{"0000000000000000000f14c35b2d841e986ab5441de8c585d5ffe55ea1e395ad"}, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS);
@@ -41,7 +60,7 @@ index 64809a7..d412b26 100644
          consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
          consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
          consensus.nPowTargetSpacing = 10 * 60;
-@@ -108,55 +110,47 @@ public:
+@@ -108,55 +111,47 @@ public:
  
          // Deployment of Taproot (BIPs 340-342)
          consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
@@ -114,11 +133,132 @@ index 64809a7..d412b26 100644
  
          vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
  
+@@ -565,6 +560,7 @@ public:
+         consensus.signet_blocks = false;
+         consensus.signet_challenge.clear();
+         consensus.nSubsidyHalvingInterval = 150;
++        consensus.devfee_start_height = 200; // Radthal : meme regle sur regtest, a un bloc bas pour pouvoir la tester
+         consensus.BIP34Height = 1; // Always active unless overridden
+         consensus.BIP34Hash = uint256();
+         consensus.BIP65Height = 1;  // Always active unless overridden
+diff --git a/src/node/miner.cpp b/src/node/miner.cpp
+index 7ea8d10..cf276be 100644
+--- a/src/node/miner.cpp
++++ b/src/node/miner.cpp
+@@ -176,8 +176,14 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
+     coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
+     // Block subsidy + fees
+     const CAmount block_reward{nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus())};
+-    coinbaseTx.vout[0].nValue = block_reward;
+-    coinbase_tx.block_reward_remaining = block_reward;
++    // Radthal : une partie de la recompense va a l'adresse du developpeur (sortie obligatoire, voir GetDevFeeAmount)
++    const CAmount dev_amount{GetDevFeeAmount(nHeight, chainparams.GetConsensus())};
++    coinbaseTx.vout[0].nValue = block_reward - dev_amount;
++    coinbase_tx.block_reward_remaining = block_reward - dev_amount;
++    if (dev_amount > 0) {
++        coinbaseTx.vout.emplace_back(dev_amount, GetDevFeeScript());
++        coinbase_tx.required_outputs.push_back(coinbaseTx.vout.back());
++    }
+ 
+     // Start the coinbase scriptSig with the block height as required by BIP34.
+     // Mining clients are expected to append extra data to this prefix, so
+diff --git a/src/rpc/mining.cpp b/src/rpc/mining.cpp
+index 043e11f..bcd2e14 100644
+--- a/src/rpc/mining.cpp
++++ b/src/rpc/mining.cpp
+@@ -680,7 +680,12 @@ static RPCHelpMan getblocktemplate()
+                 {
+                     {RPCResult::Type::STR_HEX, "key", "values must be in the coinbase (keys may be ignored)"},
+                 }},
+-                {RPCResult::Type::NUM, "coinbasevalue", "maximum allowable input to coinbase transaction, including the generation award and transaction fees (in satoshis)"},
++                {RPCResult::Type::NUM, "coinbasevalue", "maximum allowable input to coinbase transaction, including the generation award and transaction fees (in satoshis). On Radthal this includes the developer share"},
++                {RPCResult::Type::OBJ, "devfee", /*optional=*/true, "Radthal: developer share that the coinbase must pay from the height 'devfee_start_height' on (absent before)",
++                {
++                    {RPCResult::Type::STR_HEX, "script", "scriptPubKey the share must be paid to"},
++                    {RPCResult::Type::NUM, "value", "minimum amount to pay to that script (in satoshis); it is part of coinbasevalue"},
++                }},
+                 {RPCResult::Type::STR, "longpollid", "an id to include with a request to longpoll on an update to this template"},
+                 {RPCResult::Type::STR, "target", "The hash target"},
+                 {RPCResult::Type::NUM_TIME, "mintime", "The minimum timestamp appropriate for the next block time, expressed in " + UNIX_EPOCH_TIME + ". Adjusted for the proposed BIP94 timewarp rule."},
+@@ -991,7 +996,13 @@ static RPCHelpMan getblocktemplate()
+     result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
+     result.pushKV("transactions", std::move(transactions));
+     result.pushKV("coinbaseaux", std::move(aux));
+-    result.pushKV("coinbasevalue", block.vtx[0]->vout[0].nValue);
++    result.pushKV("coinbasevalue", block.vtx[0]->GetValueOut());
++    if (const CAmount dev_amount{GetDevFeeAmount(pindexPrev->nHeight + 1, consensusParams)}; dev_amount > 0) {
++        UniValue devfee(UniValue::VOBJ);
++        devfee.pushKV("script", HexStr(GetDevFeeScript()));
++        devfee.pushKV("value", dev_amount);
++        result.pushKV("devfee", std::move(devfee));
++    }
+     result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
+     result.pushKV("target", hashTarget.GetHex());
+     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
+@@ -1019,8 +1030,14 @@ static RPCHelpMan getblocktemplate()
+     }
+ 
+     if (auto coinbase{block_template->getCoinbaseTx()}; coinbase.required_outputs.size() > 0) {
+-        CHECK_NONFATAL(coinbase.required_outputs.size() == 1); // Only one output is currently expected
+-        result.pushKV("default_witness_commitment", HexStr(coinbase.required_outputs[0].scriptPubKey));
++        // Radthal : la sortie de la part du developpeur (si elle existe) s'ajoute a l'engagement de witness (OP_RETURN)
++        CHECK_NONFATAL(coinbase.required_outputs.size() <= 2);
++        for (const CTxOut& out : coinbase.required_outputs) {
++            if (!out.scriptPubKey.empty() && out.scriptPubKey[0] == OP_RETURN) {
++                result.pushKV("default_witness_commitment", HexStr(out.scriptPubKey));
++                break;
++            }
++        }
+     }
+ 
+     return result;
 diff --git a/src/validation.cpp b/src/validation.cpp
-index d3cabe4..aa06829 100644
+index d3cabe4..1644b7c 100644
 --- a/src/validation.cpp
 +++ b/src/validation.cpp
-@@ -4112,6 +4112,14 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
+@@ -1853,6 +1853,20 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
+     return nSubsidy;
+ }
+ 
++CAmount GetDevFeeAmount(int nHeight, const Consensus::Params& consensusParams)
++{
++    if (nHeight < consensusParams.devfee_start_height) return 0;
++    // 2 % de la subvention, arrondi a l'unite inferieure (la subvention est un multiple de 50 unites tant que le halving est < 6)
++    return GetBlockSubsidy(nHeight, consensusParams) * RADTHAL_DEVFEE_PERCENT / 100;
++}
++
++CScript GetDevFeeScript()
++{
++    using namespace util::hex_literals;
++    // rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6 : P2WPKH (version 0, programme de 20 octets)
++    return CScript() << OP_0 << "87c4d2a2308d47eb6141ddeecfb23c6c23e6b58c"_hex;
++}
++
+ CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)
+     : m_dbview{std::move(db_params), std::move(options)},
+       m_catcherview(&m_dbview) {}
+@@ -2615,6 +2629,20 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state,
+         state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount",
+                       strprintf("coinbase pays too much (actual=%d vs limit=%d)", block.vtx[0]->GetValueOut(), blockReward));
+     }
++    // Radthal : part du developpeur (voir GetDevFeeAmount). La regle est appliquee ici, dans ConnectBlock, comme celle du montant de
++    // la coinbase : elle est donc aussi verifiee lors d'une re-indexation.
++    if (state.IsValid() && pindex->nHeight >= params.GetConsensus().devfee_start_height) {
++        const CAmount dev_required{GetDevFeeAmount(pindex->nHeight, params.GetConsensus())};
++        const CScript dev_script{GetDevFeeScript()};
++        CAmount dev_paid{0};
++        for (const CTxOut& out : block.vtx[0]->vout) {
++            if (out.scriptPubKey == dev_script) dev_paid += out.nValue;
++        }
++        if (dev_paid < dev_required) {
++            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-devfee",
++                          strprintf("coinbase does not pay the developer share (paid=%d vs required=%d)", dev_paid, dev_required));
++        }
++    }
+     if (control) {
+         auto parallel_result = control->Complete();
+         if (parallel_result.has_value() && state.IsValid()) {
+@@ -4112,6 +4140,14 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
      return total_work;
  }
  
@@ -133,7 +273,7 @@ index d3cabe4..aa06829 100644
  /** Context-dependent validity checks.
   *  By "context", we mean only the previous block headers, but not the UTXO
   *  set; UTXO-related validity checks are done in ConnectBlock().
-@@ -4136,6 +4144,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
+@@ -4136,6 +4172,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
      if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
          return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
  
@@ -150,3 +290,21 @@ index d3cabe4..aa06829 100644
      // Check timestamp against prev
      if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
          return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
+diff --git a/src/validation.h b/src/validation.h
+index 7aeaafe..292e5aa 100644
+--- a/src/validation.h
++++ b/src/validation.h
+@@ -101,6 +101,13 @@ extern const std::vector<std::string> CHECKLEVEL_DOC;
+ 
+ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
+ 
++/** Radthal : part du developpeur. A partir de consensusParams.devfee_start_height, la transaction coinbase de chaque bloc doit
++ *  contenir des sorties vers GetDevFeeScript() dont le total est d'au moins GetDevFeeAmount() (2 % de la subvention du bloc,
++ *  les frais n'etant pas comptes). Le reste de la recompense va au mineur. */
++static constexpr int RADTHAL_DEVFEE_PERCENT{2};
++CAmount GetDevFeeAmount(int nHeight, const Consensus::Params& consensusParams);
++CScript GetDevFeeScript();
++
+ bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const bilingual_str& message);
+ 
+ /** Prune block files up to a given height */
