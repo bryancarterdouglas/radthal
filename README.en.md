@@ -4,7 +4,7 @@
 
 <h1 align="center">Radthal</h1>
 
-🇫🇷 [Version française](README.md) (the reference text: if the two ever differ, the French one wins)
+🇫🇷 [Version française](README.md) (the reference text: if the two ever differ, the French one wins) · 🌐 [Project website](https://bryancarterdouglas.github.io/radthal/)
 
 Radthal is an experimental cryptocurrency: a **fork of Bitcoin Core v31.1** with Bitcoin's rules (SHA-256, difficulty retarget every
 2016 blocks, 10-minute block target, halving every 210,000 blocks) and its own chain, with one open difference: a

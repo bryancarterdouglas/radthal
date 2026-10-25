@@ -4,7 +4,7 @@
 
 <h1 align="center">Radthal</h1>
 
-🇬🇧 [English version](README.en.md)
+🇬🇧 [English version](README.en.md) · 🌐 [Site de présentation](https://bryancarterdouglas.github.io/radthal/)
 
 Radthal est une crypto-monnaie expérimentale : un **fork de Bitcoin Core v31.1** avec les règles de Bitcoin
 (SHA-256, ajustement de la difficulté tous les 2016 blocs, blocs de 10 minutes visés, halving tous les 210 000 blocs)

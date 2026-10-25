@@ -1,0 +1,1370 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radthal</title>
+<meta name="description" content="Radthal : une crypto-monnaie expérimentale pour le peuple, fork de Bitcoin Core : un nœud sur un Raspberry Pi, du minage en solo, et un projet en développement, payer par radio. Aucune valeur, aucun marché, aucune promesse.">
+<meta property="og:title" content="Radthal">
+<meta property="og:description" content="Radthal : une crypto-monnaie expérimentale pour le peuple, fork de Bitcoin Core : un nœud sur un Raspberry Pi, du minage en solo, et un projet en développement, payer par radio. Aucune valeur, aucun marché, aucune promesse.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bryancarterdouglas.github.io/radthal/">
+<meta property="og:image" content="https://bryancarterdouglas.github.io/radthal/logo-radthal.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="logo-radthal.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,600;6..96,700;6..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  /* Palette : la piece. Encre bleu nuit, anneau bleu, perles grises, six cibles rouges. */
+  --bg:#060b16; --surface:#0c1426; --surface-2:#111c35; --line:#1f2d4d;
+  --fg:#e8edf7; --muted:#9ba8c4; --blue:#5a9bf5; --blue-deep:#0b4fa0; --red:#ff6b5f; --pearl:#8d97ab;
+  --glow:rgba(47,123,224,.28);
+  /* Typographie : Bodoni Moda pour les titres (le R de la piece), Public Sans pour lire, IBM Plex Mono pour la chaine. */
+  --display:'Bodoni Moda','Bodoni 72',Didot,'Playfair Display',Georgia,serif;
+  --body:'Public Sans','Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f3f5fa; --surface:#ffffff; --surface-2:#e8edf6; --line:#d3dae8;
+    --fg:#0a1226; --muted:#475572; --blue:#0b4fa0; --blue-deep:#0b4fa0; --red:#c42f27; --pearl:#7c869a;
+    --glow:rgba(11,79,160,.16); color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f3f5fa; --surface:#ffffff; --surface-2:#e8edf6; --line:#d3dae8;
+  --fg:#0a1226; --muted:#475572; --blue:#0b4fa0; --blue-deep:#0b4fa0; --red:#c42f27; --pearl:#7c869a;
+  --glow:rgba(11,79,160,.16); color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.65 var(--body);
+  padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+/* une seule langue visible a la fois */
+:root:not([data-lang="en"]) .en{display:none!important}
+:root[data-lang="en"] .fr{display:none!important}
+a{color:var(--blue);text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1080px;margin-inline:auto}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:clamp(30px,4.4vw,46px);letter-spacing:-.01em}
+h3{font-size:22px}
+p{margin:0 0 1em;max-width:66ch}
+code,.mono{font-family:var(--mono)}
+.eyebrow{font:500 12.5px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* ---- haut de page */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.bar{max-width:1080px;margin-inline:auto;display:flex;align-items:center;gap:20px;min-height:60px;flex-wrap:wrap;padding-block:8px}
+.brand{display:flex;align-items:center;gap:10px;font:700 24px/1 var(--display);color:var(--fg);text-decoration:none}
+.brand img{width:34px;height:34px}
+nav.menu{display:flex;gap:6px 20px;flex-wrap:wrap;margin-left:auto;font-size:15px}
+nav.menu a{color:var(--muted);text-decoration:none;padding:6px 0}
+nav.menu a:hover{color:var(--fg);text-decoration:underline}
+.langs{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.langs button{font:600 13px/1 var(--mono);letter-spacing:.06em;background:transparent;color:var(--muted);border:0;padding:0 14px;min-height:36px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--blue-deep);color:#fff}
+.langs button:not([aria-pressed="true"]):hover{color:var(--fg)}
+.snd{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.snd:hover{color:var(--fg)}
+.snd[aria-pressed="true"]{background:var(--blue-deep);border-color:transparent;color:#fff}
+.snd .x{display:block}.snd .w{display:none}
+.snd[aria-pressed="true"] .x{display:none}.snd[aria-pressed="true"] .w{display:block}
+@media (prefers-reduced-motion:no-preference){.snd[aria-pressed="true"] .w{animation:sndw 2.4s ease-in-out infinite}.snd[aria-pressed="true"] .w+.w{animation-delay:.35s}}
+@keyframes sndw{0%,100%{opacity:1}50%{opacity:.25}}
+.vol{position:fixed;z-index:25;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;
+  padding:9px 16px 9px 14px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface) 95%,transparent);color:var(--muted);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 6px 24px rgba(0,0,0,.22);transition:opacity .5s}
+.vol[hidden]{display:none}
+.vol.idle{opacity:.4}
+.vol:hover,.vol:focus-within{opacity:1}
+.vol svg{flex:none}
+.vol input{width:128px;height:28px;margin:0;accent-color:var(--blue);cursor:pointer;background:transparent}
+.vol output{font:500 12.5px/1 var(--mono);min-width:2.2ch;text-align:right;color:var(--fg)}
+
+/* ---- section de tete */
+.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:40px 56px;align-items:center;padding-block:56px 40px}
+.hero h1{font-size:clamp(64px,13vw,132px);letter-spacing:-.025em;margin:14px 0 18px}
+.lede{font-size:clamp(18px,2.1vw,22px);line-height:1.55;color:var(--fg);max-width:34em}
+.coin{position:relative;justify-self:center;--cs:min(340px,70vw);width:var(--cs)}
+.coin::before{content:"";position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(circle,var(--glow),transparent 66%)}
+.nope{display:flex;flex-wrap:wrap;gap:8px 22px;margin:26px 0;padding:14px 18px;border:1px solid var(--red);border-radius:12px;
+  font:600 14px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.nope span{display:inline-flex;align-items:center;gap:9px}
+.ring{display:inline-block;width:14px;height:14px;border:2.5px solid var(--red);border-radius:50%;flex:none;
+  background:radial-gradient(circle,var(--red) 0 1.6px,transparent 2px)}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:10px;
+  font:600 16px/1 var(--body);text-decoration:none;border:1.5px solid var(--blue)}
+.btn.main{background:var(--blue-deep);border-color:var(--blue-deep);color:#fff}
+.btn.main:hover{filter:brightness(1.15)}
+.btn.alt{color:var(--blue)}
+.btn.alt:hover{background:var(--surface-2)}
+.facts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-block:1px solid var(--line);margin-bottom:8px}
+.facts div{padding:16px 16px 16px 0}
+.facts div+div{padding-left:16px;border-left:1px solid var(--line)}
+.facts dt{font:500 11.5px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.facts dd{margin:0;font:500 16px/1.35 var(--mono)}
+dl{margin:0}
+
+/* ---- sections */
+section{padding-block:68px 8px}
+.sec-head{display:flex;flex-direction:column;gap:12px;margin-bottom:30px}
+.pearls{height:10px;margin:0 0 22px;background:radial-gradient(circle at 5px 5px,var(--pearl) 2.2px,transparent 2.8px) 0 0/16px 10px repeat-x;opacity:.8;position:relative}
+.pearls::after{content:"";position:absolute;left:0;top:-4px;width:18px;height:18px;border:3px solid var(--red);border-radius:50%;
+  background:radial-gradient(circle,var(--red) 0 2px,transparent 2.5px);background-color:var(--bg)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 24px 14px;min-width:0}
+.card h3{margin-bottom:10px}
+.card p{color:var(--muted)}
+.card p:last-child{margin-bottom:10px}
+.card.idea{grid-column:1/-1;border-style:dashed;background:transparent}
+.tag{display:inline-block;font:600 11.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+
+.spec{display:grid;grid-template-columns:minmax(150px,.32fr) minmax(0,1fr);border-top:1px solid var(--line)}
+.spec dt,.spec dd{padding:14px 0;border-bottom:1px solid var(--line);margin:0}
+.spec dt{color:var(--muted);font-size:15px;padding-right:16px}
+.spec dd{font:400 15px/1.55 var(--mono);overflow-wrap:anywhere}
+.spec dd small{display:block;font:400 14px/1.5 var(--body);color:var(--muted);margin-top:2px}
+
+ol.rail{list-style:none;margin:0;padding:0}
+ol.rail li{position:relative;padding:0 0 38px 62px;min-width:0}
+ol.rail li:not(:last-child)::before{content:"";position:absolute;left:12px;top:36px;bottom:2px;width:8px;
+  background:radial-gradient(circle at 4px 4px,var(--pearl) 2.2px,transparent 2.8px) 0 0/8px 15px repeat-y}
+ol.rail li::after{content:"";position:absolute;left:2px;top:6px;width:28px;height:28px;border:3px solid var(--red);border-radius:50%;
+  background:radial-gradient(circle,var(--red) 0 3px,transparent 3.6px),var(--bg)}
+.rail .h{font:700 clamp(30px,5vw,46px)/1.05 var(--display);font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.01em}
+.rail .k{font:500 12.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:6px 0 8px}
+.rail p{margin:0 0 6px;color:var(--muted)}
+.rail .every{margin:-6px 0 34px 62px;font:500 13px/1.5 var(--mono);color:var(--muted)}
+
+pre{margin:0 0 14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;
+  font:400 14px/1.7 var(--mono);color:var(--fg)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+button.copy{font:600 13px/1 var(--mono);background:transparent;color:var(--blue);border:1.5px solid var(--blue);border-radius:8px;
+  min-height:40px;padding:0 14px;cursor:pointer}
+button.copy:hover{background:var(--surface-2)}
+.card .more{display:inline-block;margin:0 0 12px;font-weight:600}
+
+.shots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:0;padding:0;list-style:none}
+.shots figure{margin:0;min-width:0}
+.shots img{width:100%;height:auto;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
+.shots{align-items:start}
+.shots figcaption{margin-top:10px;font-size:15px;color:var(--muted)}
+.note{font-size:14.5px;color:var(--muted);margin-top:16px}
+
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px 44px;align-items:start}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 22px 12px;min-width:0}
+.box .lab{font:500 11.5px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.box .val{font:400 14.5px/1.55 var(--mono);overflow-wrap:anywhere;margin-bottom:14px}
+.limits{list-style:none;margin:0;padding:0;display:grid;gap:14px;max-width:760px}
+.limits li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;align-items:start}
+.limits .ring{margin-top:6px}
+
+footer{margin-top:80px;border-top:1px solid var(--line);padding-block:34px 56px;color:var(--muted);font-size:15px}
+footer .links{display:flex;flex-wrap:wrap;gap:8px 26px;margin-bottom:20px}
+footer p{max-width:70ch;font-size:14.5px}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;padding-block:36px 28px}
+  .coin{order:-1;--cs:min(220px,56vw);width:var(--cs);justify-self:start}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .facts div:nth-child(odd){padding-left:0;border-left:0}
+  .facts div:nth-child(n+3){border-top:1px solid var(--line)}
+  .facts div:last-child{grid-column:1/-1}
+  .split{grid-template-columns:1fr}
+  .shots{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;padding-bottom:10px}
+  .shots li{flex:0 0 min(270px,76vw);scroll-snap-align:start}
+}
+@media (max-width:640px){
+  body{font-size:16.5px}
+  .grid2{grid-template-columns:1fr}
+  .spec{grid-template-columns:1fr}
+  .spec dt{border-bottom:0;padding-bottom:0}
+  nav.menu{display:none}
+  .snd{margin-left:auto}
+  section{padding-block:52px 4px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* ===== Animation : cinema, braises, grain, glitch, piece en 3D (tout s'arrete si "reduire les animations") ===== */
+body{overflow-x:clip}
+.stage{position:relative;isolation:isolate}
+.stage>*:not(canvas){position:relative;z-index:2}
+.stage::before,.stage::after,#fx{position:absolute;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);pointer-events:none}
+#fx{display:block;height:calc(100% + 72px);z-index:0}
+.stage::before{content:"";z-index:1;opacity:.07;mix-blend-mode:soft-light;animation:grain .9s steps(1) infinite;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+.stage::after{content:"";z-index:1;background:radial-gradient(ellipse 72% 85% at 50% 42%,transparent 38%,color-mix(in srgb,var(--bg) 92%,transparent) 100%)}
+@keyframes grain{0%{background-position:0 0}16%{background-position:-34px 22px}33%{background-position:-62px -41px}50%{background-position:41px 52px}66%{background-position:-21px -73px}83%{background-position:57px -18px}100%{background-position:0 0}}
+
+/* arrivee du texte */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.hero .eyebrow,.hero h1,.hero .lede,.hero .nope,.hero .cta{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+.hero h1{animation-delay:.05s}.hero .lede{animation-delay:.13s}.hero .nope{animation-delay:.2s}.hero .cta{animation-delay:.27s}
+@keyframes ping{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--red) 55%,transparent)}55%{box-shadow:0 0 0 8px transparent}}
+.nope .ring{animation:ping 3.2s ease-out infinite}
+.nope span:nth-child(2) .ring{animation-delay:.5s}.nope span:nth-child(3) .ring{animation-delay:1s}
+
+/* le titre accroche une fois toutes les 7 secondes */
+.glitch{position:relative;width:fit-content}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;left:0;top:0;pointer-events:none;opacity:0;font:inherit;letter-spacing:inherit}
+.glitch::before{color:var(--red);animation:gl1 7s steps(1) infinite}
+.glitch::after{color:var(--blue);animation:gl2 7s steps(1) infinite}
+@keyframes gl1{0%,91%,100%{opacity:0}92%{opacity:.85;transform:translate(-6px,1px);clip-path:inset(12% 0 58% 0)}94%{opacity:.85;transform:translate(7px,-1px);clip-path:inset(62% 0 10% 0)}96%{opacity:.7;transform:translate(-3px,0);clip-path:inset(36% 0 38% 0)}98%{opacity:0}}
+@keyframes gl2{0%,91%,100%{opacity:0}92%{opacity:.85;transform:translate(6px,-1px);clip-path:inset(58% 0 14% 0)}94%{opacity:.85;transform:translate(-7px,1px);clip-path:inset(8% 0 66% 0)}96%{opacity:.7;transform:translate(4px,0);clip-path:inset(40% 0 34% 0)}98%{opacity:0}}
+
+/* la piece : vrai volume, elle tourne, une lueur la traverse */
+.coin{aspect-ratio:1;perspective:1100px;translate:0 calc(var(--sy,0) * -0.05px);animation:arrive 1.1s cubic-bezier(.2,.7,.2,1) both}
+@keyframes arrive{from{opacity:0;transform:translateY(26px) scale(.8)}to{opacity:1;transform:none}}
+.coin::before{animation:glow 5s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+.float,.tilt,.disc{position:absolute;inset:0;transform-style:preserve-3d}
+.float{animation:bob 7s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.tilt{transform:rotateY(calc(var(--tx,0) * 1deg)) rotateX(calc(var(--ty,0) * 1deg));transition:transform .25s ease-out}
+.disc{transform:rotateX(-5deg) rotateY(-16deg);animation:spin 15s cubic-bezier(.45,.05,.55,.95) infinite}
+@keyframes spin{0%{transform:rotateX(-5deg) rotateY(-24deg)}30%,45%{transform:rotateX(-3deg) rotateY(24deg)}80%{transform:rotateX(-5deg) rotateY(384deg)}100%{transform:rotateX(-5deg) rotateY(336deg)}}
+.face{position:absolute;inset:0;border-radius:50%;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.face.front{transform:translateZ(9px)}
+.face.rf{transform:translateZ(13px)}
+.face.back{transform:rotateY(180deg) translateZ(9px)}
+.face.rb{transform:rotateY(180deg) translateZ(13px)}
+.face svg{display:block;width:100%;height:100%}
+.facet{position:absolute;left:50%;top:50%;height:29.6px;margin-top:-14.8px;width:calc(var(--cs) * .02536 + .6px);margin-left:calc(var(--cs) * -.01268 - .3px);background:linear-gradient(90deg,#0055A4 calc(50% - .45px),#8d949d calc(50% - .45px) calc(50% + .45px),#0055A4 calc(50% + .45px));transform:rotateZ(calc(var(--i) * 3deg)) translateY(calc(var(--cs) * -.484375)) rotateX(90deg);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.wall{position:absolute;left:50%;top:50%;height:5.6px;margin-top:-2.8px;width:calc(var(--cs) * .04336 + .6px);margin-left:calc(var(--cs) * -.02168 - .3px);background:#00478c;transform:translateZ(calc(var(--z) * 1px)) rotateZ(calc(var(--i) * 6deg)) translateY(calc(var(--cs) * -.4140625)) rotateX(-90deg);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.shine{position:absolute;inset:0;border-radius:50%;pointer-events:none;mix-blend-mode:screen;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.34) 50%,transparent 62%) -160% 0/250% 100% no-repeat;animation:shine 7s ease-in-out infinite}
+@keyframes shine{0%,55%{background-position:-160% 0}85%,100%{background-position:160% 0}}
+
+/* barre de lecture : l'anneau rouge avance avec la page */
+header.top .prog{position:absolute;left:0;right:0;bottom:-1px;height:3px;pointer-events:none;background:linear-gradient(90deg,var(--blue) calc(var(--p,0) * 100%),transparent 0)}
+.prog i{position:absolute;top:-6px;left:calc(var(--p,0) * (100% - 15px));width:15px;height:15px;border:2.5px solid var(--red);border-radius:50%;
+  background:radial-gradient(circle,var(--red) 0 1.6px,transparent 2px),var(--bg)}
+
+/* sections : les reperes s'allument quand on y arrive */
+.sec-head h2{transition:letter-spacing .9s cubic-bezier(.2,.7,.2,1)}
+.sec-head:not(.seen) h2{letter-spacing:.05em}
+.rail li.seen::after{animation:pop .9s cubic-bezier(.2,.9,.3,1.25) both;box-shadow:0 0 22px color-mix(in srgb,var(--red) 60%,transparent)}
+@keyframes pop{0%{transform:scale(.3)}100%{transform:scale(1)}}
+.pearls::after{animation:ping 3.2s ease-out infinite}
+.card,.box{position:relative;overflow:hidden;transition:transform .25s ease,border-color .25s}
+.card::after,.box::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--blue) 22%,transparent),transparent 70%)}
+.card:hover::after,.box:hover::after{opacity:1}
+.card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--blue) 55%,var(--line))}
+.btn{transition:transform .15s,filter .15s,background .15s}
+.btn:hover{transform:translateY(-2px)}
+
+@media (max-width:860px){.coin{translate:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .coin{translate:none}
+  .stage::before{display:none}
+}
+
+/* ===== Monnaie du peuple + radio ===== */
+.slogan{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin:0 0 26px;max-width:none;font:700 clamp(20px,2.7vw,30px)/1.2 var(--display);color:var(--fg)}
+.slogan .goal{font:600 12.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--red);border:1.5px solid var(--red);border-radius:999px;padding:9px 15px;text-decoration:none}
+.slogan .goal:hover{background:color-mix(in srgb,var(--red) 14%,transparent)}
+.hero .slogan{animation:rise .7s cubic-bezier(.2,.7,.2,1) .09s both}
+.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);margin-top:6px}
+.pillar{position:relative;padding:28px 20px 12px 0;min-width:0}
+.pillar+.pillar{padding-left:20px;border-left:1px solid var(--line)}
+.pillar::before{content:"";position:absolute;left:0;top:-1px;height:3px;width:0;background:var(--red);transition:width .9s cubic-bezier(.2,.7,.2,1)}
+.pillar+.pillar::before{left:20px}
+.pillar.seen::before{width:56px}
+.pillar .n{font:500 12.5px/1 var(--mono);letter-spacing:.14em;color:var(--red)}
+.pillar h3{font-size:clamp(22px,2.3vw,27px);margin:12px 0 10px}
+.pillar p{color:var(--muted);font-size:16px;margin:0 0 .6em}
+.pillar .tag{margin:4px 0 10px;line-height:1.35}
+.call{display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;margin-top:30px;padding:22px 24px;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:12px;background:var(--surface)}
+.call p{margin:0;flex:1 1 320px;max-width:none;font:700 clamp(19px,2.2vw,24px)/1.3 var(--display)}
+.sec-head .tag{margin-bottom:10px}
+.radiofig{margin:8px 0 6px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:18px 14px 8px}
+.radiofig svg{display:block;width:100%;height:auto;overflow:visible}
+.rf-line{fill:none;stroke:var(--line);stroke-width:2.5;stroke-dasharray:6 9}
+.rf-sh{fill:none;stroke:var(--blue);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.rf-dot{fill:var(--red)}
+.rf-wv{fill:none;stroke:var(--red);stroke-width:2.5;opacity:.4;transform-box:fill-box;transform-origin:center;animation:wv 3.6s ease-out infinite}
+@keyframes wv{0%{transform:scale(.3);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+.rf-pk{fill:var(--red);opacity:0;animation:pk 6s linear infinite}
+@keyframes pk{0%{transform:translate(0,0);opacity:0}2%{opacity:1}22%{transform:translate(var(--dx),var(--dy));opacity:1}25%{transform:translate(var(--dx),var(--dy));opacity:0}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+ol.hops{list-style:none;counter-reset:h;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+ol.hops li{position:relative;padding-top:44px;color:var(--muted);font-size:16px;line-height:1.55}
+ol.hops li strong{color:var(--fg)}
+ol.hops li::before{counter-increment:h;content:counter(h);position:absolute;left:0;top:0;width:32px;height:32px;border:2.5px solid var(--red);border-radius:50%;
+  display:grid;place-items:center;font:600 14px/1 var(--mono);color:var(--fg);background:var(--bg)}
+ul.plain{margin:0 0 12px;padding-left:1.2em;color:var(--muted)}
+ul.plain li{margin:0 0 .45em}
+@media (max-width:860px){
+  .pillars{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pillar:nth-child(odd){padding-left:0;border-left:0}
+  .pillar:nth-child(odd)::before{left:0}
+  .pillar:nth-child(n+3){border-top:1px solid var(--line)}
+  .pillar:nth-child(n+3)::before{top:-1px}
+}
+@media (max-width:640px){
+  .pillars{grid-template-columns:1fr}
+  .pillar,.pillar+.pillar{padding-left:0;border-left:0}
+  .pillar+.pillar{border-top:1px solid var(--line)}
+  .pillar+.pillar::before{left:0}
+  ol.hops{grid-template-columns:1fr}
+  ol.hops li{padding-top:0;padding-left:46px}
+  .radiofig{padding:10px 6px 4px}
+}
+
+/* ===== Agrandir les captures ===== */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+button.zoom{display:block;position:relative;width:100%;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:zoom-in;border-radius:16px}
+button.zoom img{display:block;transition:border-color .25s,transform .25s}
+button.zoom:hover img{border-color:var(--blue);transform:translateY(-2px)}
+button.zoom::after{content:"";position:absolute;right:10px;bottom:10px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);
+  background:rgba(6,11,22,.72) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'><circle cx='10.5' cy='10.5' r='6.5'/><path d='M15.5 15.5L21 21M10.5 8v5M8 10.5h5'/></svg>") center/20px no-repeat;pointer-events:none}
+dialog#lb{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#fff;overflow:hidden}
+dialog#lb:not([open]){display:none}
+dialog#lb::backdrop{background:rgba(3,6,14,.93);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.lb-body{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 70px 14px}
+.lb-scroll{overflow:auto;max-width:100%;max-height:calc(100vh - 110px);max-height:calc(100dvh - 110px);display:flex;justify-content:center;border-radius:12px}
+.lb-img{display:block;margin:0;padding:0;border:0;background:none;cursor:zoom-in;line-height:0}
+.lb-img img{display:block;width:auto;height:auto;max-width:100%;max-height:calc(100vh - 110px);max-height:calc(100dvh - 110px);border-radius:12px;border:1px solid var(--line);background:#0c1426}
+dialog.full .lb-scroll{justify-content:flex-start}
+dialog.full .lb-img{cursor:zoom-out}
+dialog.full .lb-img img{max-height:none;width:min(1000px,100%)}
+.lb-cap{margin:12px 0 0;max-width:70ch;text-align:center;font-size:15px;line-height:1.45;color:#cfd6e6}
+button.lb-b{position:absolute;display:grid;place-items:center;width:46px;height:46px;padding:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);
+  background:rgba(10,18,36,.72);color:#fff;font:400 28px/1 var(--body);cursor:pointer;transition:background .15s,border-color .15s}
+button.lb-b:hover{background:var(--blue-deep);border-color:#fff}
+.lb-x{top:max(12px,env(safe-area-inset-top));right:14px}
+.lb-p,.lb-n{top:50%;margin-top:-23px}
+.lb-p{left:12px}.lb-n{right:12px}
+@media (max-width:640px){
+  .lb-body{padding:60px 10px 74px}
+  .lb-scroll{max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px)}
+  .lb-img img{max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px)}
+  .lb-p,.lb-n{top:auto;bottom:14px;margin-top:0}
+  .lb-p{left:calc(50% - 56px)}.lb-n{right:calc(50% - 56px)}
+}
+
+/* ===== Demo : miner un bloc ===== */
+.dchain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px;margin:8px 0 0;padding:0;list-style:none}
+.blk{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;min-width:0;transition:border-color .25s,box-shadow .25s}
+.blk:not(:last-child)::after{content:"";position:absolute;top:50%;right:-37px;width:36px;border-top:2.5px dotted var(--pearl)}
+.blk[data-state="ok"]{border-color:var(--blue);box-shadow:0 0 0 1px color-mix(in srgb,var(--blue) 40%,transparent),0 10px 30px -14px var(--glow)}
+.blk[data-state="bad"]{border-color:var(--red)}
+.blk header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:14px}
+.blk .num{font:700 22px/1 var(--display)}
+.blk .st{font:600 12px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.blk .st .s{display:none}
+.blk[data-state="ok"] .st{color:var(--blue)}
+.blk[data-state="bad"] .st{color:var(--red)}
+.blk[data-state="ok"] .s-ok,.blk[data-state="bad"] .s-bad{display:inline}
+.blk label,.blk dt{display:block;font:500 11.5px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.blk input{width:100%;box-sizing:border-box;font:500 15px/1.3 var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.blk input:disabled{opacity:.6}
+.blk dl{margin:16px 0 14px}
+.blk dd{margin:0 0 12px;font:500 14px/1.4 var(--mono);overflow-wrap:anywhere}
+.blk .z{color:var(--blue);font-weight:700}
+.blk .btn.sm{min-height:42px;padding:0 18px;font-size:15px;width:100%;background:transparent;cursor:pointer}
+.btn.sm .ls{display:none}
+.btn.sm.busy .lm{display:none}
+.btn.sm.busy .ls{display:inline}
+.btn.sm:disabled,.dbar .btn:disabled{opacity:.45;cursor:default}
+.dbar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;margin-top:22px}
+.dbar .btn{cursor:pointer;min-height:44px;font-size:15px;background:transparent}
+.dbar .btn.main{background:var(--blue-deep)}
+.dstatus{flex:1 1 300px;font:600 14px/1.45 var(--mono);color:var(--muted);margin:0}
+.dstatus[data-k="ok"]{color:var(--blue)}
+.dstatus[data-k="bad"]{color:var(--red)}
+@media (max-width:860px){
+  .dchain{grid-template-columns:1fr;gap:34px}
+  .blk:not(:last-child)::after{top:auto;bottom:-35px;left:50%;right:auto;width:0;height:34px;border-top:0;border-left:2.5px dotted var(--pearl)}
+}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="bar">
+  <a class="brand" href="#haut" aria-label="Radthal"><img src="logo-radthal.png" alt="" width="34" height="34">Radthal</a>
+  <nav class="menu" aria-label="Sections">
+    <a href="#objectifs"><span class="fr">Objectifs</span><span class="en">Goals</span></a>
+    <a href="#radio"><span class="fr">Radio</span><span class="en">Radio</span></a>
+    <a href="#reseau"><span class="fr">Le réseau</span><span class="en">Network</span></a>
+    <a href="#participer"><span class="fr">Participer</span><span class="en">Join in</span></a>
+    <a href="#transparence"><span class="fr">Transparence</span><span class="en">Transparency</span></a>
+    <a href="#limites"><span class="fr">À savoir</span><span class="en">Good to know</span></a>
+  </nav>
+  <button type="button" class="snd" id="snd" aria-pressed="false" aria-label="Activer l’ambiance sonore" title="Activer l’ambiance sonore"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor" stroke="none"/><path class="w" d="M15.5 9a4 4 0 0 1 0 6"/><path class="w" d="M18 6.5a8 8 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
+  <div class="langs" role="group" aria-label="Langue / Language">
+    <button type="button" data-l="fr" aria-pressed="true">FR</button>
+    <button type="button" data-l="en" aria-pressed="false">EN</button>
+  </div>
+</div><div class="prog" aria-hidden="true"><i></i></div></header>
+
+<main class="wrap" id="haut">
+  <div class="stage">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="hero">
+    <div>
+      <div class="eyebrow"><span class="fr">Monnaie expérimentale · fork de Bitcoin Core</span><span class="en">Experimental currency · Bitcoin Core fork</span></div>
+      <h1 class="glitch" data-text="Radthal">Radthal</h1>
+      <p class="slogan"><span class="b"><span class="fr">Une monnaie du peuple.</span><span class="en">A currency of the people.</span></span>
+        <span class="b"><span class="fr">Sans permission.</span><span class="en">No permission.</span></span>
+        <a class="goal" href="#radio"><span class="fr">En développement : payer par radio</span><span class="en">In development: pay by radio</span></a></p>
+      <p class="fr lede">Une crypto-monnaie expérimentale, fork de Bitcoin Core, faite pour être vérifiée par n’importe qui : un nœud complet sur un Raspberry Pi, un mineur domestique, des règles qu’on peut lire. Elle se construit avec ceux qui la font tourner.</p><p class="en lede">An experimental cryptocurrency, a Bitcoin Core fork, made for anyone to check: a full node on a Raspberry Pi, a home miner, rules you can read. It is built with the people who run it.</p>
+      <div class="nope" role="note">
+        <span><i class="ring"></i><span class="fr">Aucune valeur</span><span class="en">No value</span></span>
+        <span><i class="ring"></i><span class="fr">Aucun marché</span><span class="en">No market</span></span>
+        <span><i class="ring"></i><span class="fr">Aucune promesse</span><span class="en">No promise</span></span>
+      </div>
+      <div class="cta">
+        <a class="btn main fr" href="https://github.com/bryancarterdouglas/radthal#installation" target="_blank" rel="noopener">Lancer un nœud</a>
+        <a class="btn main en" href="https://github.com/bryancarterdouglas/radthal/blob/main/README.en.md#installation" target="_blank" rel="noopener">Run a node</a>
+        <a class="btn alt fr" href="https://github.com/bryancarterdouglas/radthal/blob/main/MINER.md" target="_blank" rel="noopener">Miner en solo</a>
+        <a class="btn alt en" href="https://github.com/bryancarterdouglas/radthal/blob/main/MINER.en.md" target="_blank" rel="noopener">Mine solo</a>
+        <a class="btn alt" href="#demo"><span class="fr">Essayer : miner un bloc</span><span class="en">Try it: mine a block</span></a>
+      </div>
+    </div>
+    <div class="coin"><div class="float"><div class="tilt"><div class="disc"><i class="facet" style="--i:0"></i><i class="facet" style="--i:1"></i><i class="facet" style="--i:2"></i><i class="facet" style="--i:3"></i><i class="facet" style="--i:4"></i><i class="facet" style="--i:5"></i><i class="facet" style="--i:6"></i><i class="facet" style="--i:7"></i><i class="facet" style="--i:8"></i><i class="facet" style="--i:9"></i><i class="facet" style="--i:10"></i><i class="facet" style="--i:11"></i><i class="facet" style="--i:12"></i><i class="facet" style="--i:13"></i><i class="facet" style="--i:14"></i><i class="facet" style="--i:15"></i><i class="facet" style="--i:16"></i><i class="facet" style="--i:17"></i><i class="facet" style="--i:18"></i><i class="facet" style="--i:19"></i><i class="facet" style="--i:20"></i><i class="facet" style="--i:21"></i><i class="facet" style="--i:22"></i><i class="facet" style="--i:23"></i><i class="facet" style="--i:24"></i><i class="facet" style="--i:25"></i><i class="facet" style="--i:26"></i><i class="facet" style="--i:27"></i><i class="facet" style="--i:28"></i><i class="facet" style="--i:29"></i><i class="facet" style="--i:30"></i><i class="facet" style="--i:31"></i><i class="facet" style="--i:32"></i><i class="facet" style="--i:33"></i><i class="facet" style="--i:34"></i><i class="facet" style="--i:35"></i><i class="facet" style="--i:36"></i><i class="facet" style="--i:37"></i><i class="facet" style="--i:38"></i><i class="facet" style="--i:39"></i><i class="facet" style="--i:40"></i><i class="facet" style="--i:41"></i><i class="facet" style="--i:42"></i><i class="facet" style="--i:43"></i><i class="facet" style="--i:44"></i><i class="facet" style="--i:45"></i><i class="facet" style="--i:46"></i><i class="facet" style="--i:47"></i><i class="facet" style="--i:48"></i><i class="facet" style="--i:49"></i><i class="facet" style="--i:50"></i><i class="facet" style="--i:51"></i><i class="facet" style="--i:52"></i><i class="facet" style="--i:53"></i><i class="facet" style="--i:54"></i><i class="facet" style="--i:55"></i><i class="facet" style="--i:56"></i><i class="facet" style="--i:57"></i><i class="facet" style="--i:58"></i><i class="facet" style="--i:59"></i><i class="facet" style="--i:60"></i><i class="facet" style="--i:61"></i><i class="facet" style="--i:62"></i><i class="facet" style="--i:63"></i><i class="facet" style="--i:64"></i><i class="facet" style="--i:65"></i><i class="facet" style="--i:66"></i><i class="facet" style="--i:67"></i><i class="facet" style="--i:68"></i><i class="facet" style="--i:69"></i><i class="facet" style="--i:70"></i><i class="facet" style="--i:71"></i><i class="facet" style="--i:72"></i><i class="facet" style="--i:73"></i><i class="facet" style="--i:74"></i><i class="facet" style="--i:75"></i><i class="facet" style="--i:76"></i><i class="facet" style="--i:77"></i><i class="facet" style="--i:78"></i><i class="facet" style="--i:79"></i><i class="facet" style="--i:80"></i><i class="facet" style="--i:81"></i><i class="facet" style="--i:82"></i><i class="facet" style="--i:83"></i><i class="facet" style="--i:84"></i><i class="facet" style="--i:85"></i><i class="facet" style="--i:86"></i><i class="facet" style="--i:87"></i><i class="facet" style="--i:88"></i><i class="facet" style="--i:89"></i><i class="facet" style="--i:90"></i><i class="facet" style="--i:91"></i><i class="facet" style="--i:92"></i><i class="facet" style="--i:93"></i><i class="facet" style="--i:94"></i><i class="facet" style="--i:95"></i><i class="facet" style="--i:96"></i><i class="facet" style="--i:97"></i><i class="facet" style="--i:98"></i><i class="facet" style="--i:99"></i><i class="facet" style="--i:100"></i><i class="facet" style="--i:101"></i><i class="facet" style="--i:102"></i><i class="facet" style="--i:103"></i><i class="facet" style="--i:104"></i><i class="facet" style="--i:105"></i><i class="facet" style="--i:106"></i><i class="facet" style="--i:107"></i><i class="facet" style="--i:108"></i><i class="facet" style="--i:109"></i><i class="facet" style="--i:110"></i><i class="facet" style="--i:111"></i><i class="facet" style="--i:112"></i><i class="facet" style="--i:113"></i><i class="facet" style="--i:114"></i><i class="facet" style="--i:115"></i><i class="facet" style="--i:116"></i><i class="facet" style="--i:117"></i><i class="facet" style="--i:118"></i><i class="facet" style="--i:119"></i><i class="wall" style="--i:0;--z:11"></i><i class="wall" style="--i:1;--z:11"></i><i class="wall" style="--i:2;--z:11"></i><i class="wall" style="--i:3;--z:11"></i><i class="wall" style="--i:4;--z:11"></i><i class="wall" style="--i:5;--z:11"></i><i class="wall" style="--i:6;--z:11"></i><i class="wall" style="--i:7;--z:11"></i><i class="wall" style="--i:8;--z:11"></i><i class="wall" style="--i:9;--z:11"></i><i class="wall" style="--i:10;--z:11"></i><i class="wall" style="--i:11;--z:11"></i><i class="wall" style="--i:12;--z:11"></i><i class="wall" style="--i:13;--z:11"></i><i class="wall" style="--i:14;--z:11"></i><i class="wall" style="--i:15;--z:11"></i><i class="wall" style="--i:16;--z:11"></i><i class="wall" style="--i:17;--z:11"></i><i class="wall" style="--i:18;--z:11"></i><i class="wall" style="--i:19;--z:11"></i><i class="wall" style="--i:20;--z:11"></i><i class="wall" style="--i:21;--z:11"></i><i class="wall" style="--i:22;--z:11"></i><i class="wall" style="--i:23;--z:11"></i><i class="wall" style="--i:24;--z:11"></i><i class="wall" style="--i:25;--z:11"></i><i class="wall" style="--i:26;--z:11"></i><i class="wall" style="--i:27;--z:11"></i><i class="wall" style="--i:28;--z:11"></i><i class="wall" style="--i:29;--z:11"></i><i class="wall" style="--i:30;--z:11"></i><i class="wall" style="--i:31;--z:11"></i><i class="wall" style="--i:32;--z:11"></i><i class="wall" style="--i:33;--z:11"></i><i class="wall" style="--i:34;--z:11"></i><i class="wall" style="--i:35;--z:11"></i><i class="wall" style="--i:36;--z:11"></i><i class="wall" style="--i:37;--z:11"></i><i class="wall" style="--i:38;--z:11"></i><i class="wall" style="--i:39;--z:11"></i><i class="wall" style="--i:40;--z:11"></i><i class="wall" style="--i:41;--z:11"></i><i class="wall" style="--i:42;--z:11"></i><i class="wall" style="--i:43;--z:11"></i><i class="wall" style="--i:44;--z:11"></i><i class="wall" style="--i:45;--z:11"></i><i class="wall" style="--i:46;--z:11"></i><i class="wall" style="--i:47;--z:11"></i><i class="wall" style="--i:48;--z:11"></i><i class="wall" style="--i:49;--z:11"></i><i class="wall" style="--i:50;--z:11"></i><i class="wall" style="--i:51;--z:11"></i><i class="wall" style="--i:52;--z:11"></i><i class="wall" style="--i:53;--z:11"></i><i class="wall" style="--i:54;--z:11"></i><i class="wall" style="--i:55;--z:11"></i><i class="wall" style="--i:56;--z:11"></i><i class="wall" style="--i:57;--z:11"></i><i class="wall" style="--i:58;--z:11"></i><i class="wall" style="--i:59;--z:11"></i><i class="wall" style="--i:0;--z:-11"></i><i class="wall" style="--i:1;--z:-11"></i><i class="wall" style="--i:2;--z:-11"></i><i class="wall" style="--i:3;--z:-11"></i><i class="wall" style="--i:4;--z:-11"></i><i class="wall" style="--i:5;--z:-11"></i><i class="wall" style="--i:6;--z:-11"></i><i class="wall" style="--i:7;--z:-11"></i><i class="wall" style="--i:8;--z:-11"></i><i class="wall" style="--i:9;--z:-11"></i><i class="wall" style="--i:10;--z:-11"></i><i class="wall" style="--i:11;--z:-11"></i><i class="wall" style="--i:12;--z:-11"></i><i class="wall" style="--i:13;--z:-11"></i><i class="wall" style="--i:14;--z:-11"></i><i class="wall" style="--i:15;--z:-11"></i><i class="wall" style="--i:16;--z:-11"></i><i class="wall" style="--i:17;--z:-11"></i><i class="wall" style="--i:18;--z:-11"></i><i class="wall" style="--i:19;--z:-11"></i><i class="wall" style="--i:20;--z:-11"></i><i class="wall" style="--i:21;--z:-11"></i><i class="wall" style="--i:22;--z:-11"></i><i class="wall" style="--i:23;--z:-11"></i><i class="wall" style="--i:24;--z:-11"></i><i class="wall" style="--i:25;--z:-11"></i><i class="wall" style="--i:26;--z:-11"></i><i class="wall" style="--i:27;--z:-11"></i><i class="wall" style="--i:28;--z:-11"></i><i class="wall" style="--i:29;--z:-11"></i><i class="wall" style="--i:30;--z:-11"></i><i class="wall" style="--i:31;--z:-11"></i><i class="wall" style="--i:32;--z:-11"></i><i class="wall" style="--i:33;--z:-11"></i><i class="wall" style="--i:34;--z:-11"></i><i class="wall" style="--i:35;--z:-11"></i><i class="wall" style="--i:36;--z:-11"></i><i class="wall" style="--i:37;--z:-11"></i><i class="wall" style="--i:38;--z:-11"></i><i class="wall" style="--i:39;--z:-11"></i><i class="wall" style="--i:40;--z:-11"></i><i class="wall" style="--i:41;--z:-11"></i><i class="wall" style="--i:42;--z:-11"></i><i class="wall" style="--i:43;--z:-11"></i><i class="wall" style="--i:44;--z:-11"></i><i class="wall" style="--i:45;--z:-11"></i><i class="wall" style="--i:46;--z:-11"></i><i class="wall" style="--i:47;--z:-11"></i><i class="wall" style="--i:48;--z:-11"></i><i class="wall" style="--i:49;--z:-11"></i><i class="wall" style="--i:50;--z:-11"></i><i class="wall" style="--i:51;--z:-11"></i><i class="wall" style="--i:52;--z:-11"></i><i class="wall" style="--i:53;--z:-11"></i><i class="wall" style="--i:54;--z:-11"></i><i class="wall" style="--i:55;--z:-11"></i><i class="wall" style="--i:56;--z:-11"></i><i class="wall" style="--i:57;--z:-11"></i><i class="wall" style="--i:58;--z:-11"></i><i class="wall" style="--i:59;--z:-11"></i><div class="face back"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 256 256"><defs><linearGradient id="rdb-rimk" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#0055A4"/><stop offset="0.3" stop-color="#0055A4"/><stop offset="0.65" stop-color="#0055A4"/><stop offset="1" stop-color="#0055A4"/></linearGradient><radialGradient id="rdb-facek" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#050b17"/><stop offset="0.55" stop-color="#050b17"/><stop offset="1" stop-color="#050b17"/></radialGradient><linearGradient id="rdb-lgk" gradientUnits="userSpaceOnUse" x1="0" y1="62" x2="0" y2="194"><stop offset="0" stop-color="#0055A4"/><stop offset="0.35" stop-color="#0055A4"/><stop offset="0.7" stop-color="#0055A4"/><stop offset="1" stop-color="#0055A4"/></linearGradient><radialGradient id="rdb-shinek" cx="30%" cy="22%" r="55%"><stop offset="0" stop-color="#fff" stop-opacity="0.28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><filter id="rdb-shk" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.2"/></filter><clipPath id="rdb-clipk"><circle cx="128" cy="128" r="106"/></clipPath><path id="rdb-R" d="M75 77.13 88.2 78.3C88.49 93.4 88.49 108.5 88.49 123.75V130.2C88.49 145.45 88.49 160.55 88.2 175.36L75 176.67V181.66H126.9V176.67L113.41 175.36C112.97 160.4 112.97 145.3 112.97 129.91H120.01C131.3 129.91 134.82 135.77 136.87 147.79L141.12 168.02C142.59 179.9 150.07 183.86 163.55 183.86C170.88 183.86 174.99 183.13 181 181.66V176.67L167.95 175.8L163.41 151.75C160.91 137.24 155.64 129.03 136.43 126.53C159.59 123.02 167.66 111.73 167.66 99.7C167.66 82.26 153.58 72.14 127.93 72.14H75ZM113.41 77.71H121.62C136.43 77.71 144.2 85.63 144.2 100.14C144.2 113.49 137.9 124.48 121.48 124.48H112.97C112.97 107.62 112.97 92.52 113.41 77.71Z"/></defs><circle cx="128" cy="128" r="106" fill="url(#rdb-facek)"/><clipPath id="rdb-clip-rayons"><circle cx="128" cy="128" r="106"/></clipPath><g clip-path="url(#rdb-clip-rayons)"><path d="M128.00 113.00L128.00 22.00M129.99 90.05L133.55 22.15M129.57 113.08L139.08 22.58M133.94 90.47L144.58 23.31M131.12 113.33L150.04 24.32M137.84 91.29L155.43 25.61M132.64 113.73L160.76 27.19M141.62 92.52L165.99 29.04M134.10 114.30L171.11 31.16M145.25 94.14L176.12 33.55M135.50 115.01L181.00 36.20M148.70 96.13L185.73 39.10M136.82 115.86L190.31 42.24M151.91 98.47L194.71 45.62M138.04 116.85L198.93 49.23M154.87 101.13L202.95 53.05M139.15 117.96L206.77 57.07M157.53 104.09L210.38 61.29M140.14 119.18L213.76 65.69M159.87 107.30L216.90 70.27M140.99 120.50L219.80 75.00M161.86 110.75L222.45 79.88M141.70 121.90L224.84 84.89M163.48 114.38L226.96 90.01M142.27 123.36L228.81 95.24M164.71 118.16L230.39 100.57M142.67 124.88L231.68 105.96M165.53 122.06L232.69 111.42M142.92 126.43L233.42 116.92M165.95 126.01L233.85 122.45M143.00 128.00L234.00 128.00M165.95 129.99L233.85 133.55M142.92 129.57L233.42 139.08M165.53 133.94L232.69 144.58M142.67 131.12L231.68 150.04M164.71 137.84L230.39 155.43M142.27 132.64L228.81 160.76M163.48 141.62L226.96 165.99M141.70 134.10L224.84 171.11M161.86 145.25L222.45 176.12M140.99 135.50L219.80 181.00M159.87 148.70L216.90 185.73M140.14 136.82L213.76 190.31M157.53 151.91L210.38 194.71M139.15 138.04L206.77 198.93M154.87 154.87L202.95 202.95M138.04 139.15L198.93 206.77M151.91 157.53L194.71 210.38M136.82 140.14L190.31 213.76M148.70 159.87L185.73 216.90M135.50 140.99L181.00 219.80M145.25 161.86L176.12 222.45M134.10 141.70L171.11 224.84M141.62 163.48L165.99 226.96M132.64 142.27L160.76 228.81M137.84 164.71L155.43 230.39M131.12 142.67L150.04 231.68M133.94 165.53L144.58 232.69M129.57 142.92L139.08 233.42M129.99 165.95L133.55 233.85M128.00 143.00L128.00 234.00M126.01 165.95L122.45 233.85M126.43 142.92L116.92 233.42M122.06 165.53L111.42 232.69M124.88 142.67L105.96 231.68M118.16 164.71L100.57 230.39M123.36 142.27L95.24 228.81M114.38 163.48L90.01 226.96M121.90 141.70L84.89 224.84M110.75 161.86L79.88 222.45M120.50 140.99L75.00 219.80M107.30 159.87L70.27 216.90M119.18 140.14L65.69 213.76M104.09 157.53L61.29 210.38M117.96 139.15L57.07 206.77M101.13 154.87L53.05 202.95M116.85 138.04L49.23 198.93M98.47 151.91L45.62 194.71M115.86 136.82L42.24 190.31M96.13 148.70L39.10 185.73M115.01 135.50L36.20 181.00M94.14 145.25L33.55 176.12M114.30 134.10L31.16 171.11M92.52 141.62L29.04 165.99M113.73 132.64L27.19 160.76M91.29 137.84L25.61 155.43M113.33 131.12L24.32 150.04M90.47 133.94L23.31 144.58M113.08 129.57L22.58 139.08M90.05 129.99L22.15 133.55M113.00 128.00L22.00 128.00M90.05 126.01L22.15 122.45M113.08 126.43L22.58 116.92M90.47 122.06L23.31 111.42M113.33 124.88L24.32 105.96M91.29 118.16L25.61 100.57M113.73 123.36L27.19 95.24M92.52 114.38L29.04 90.01M114.30 121.90L31.16 84.89M94.14 110.75L33.55 79.88M115.01 120.50L36.20 75.00M96.13 107.30L39.10 70.27M115.86 119.18L42.24 65.69M98.47 104.09L45.62 61.29M116.85 117.96L49.23 57.07M101.13 101.13L53.05 53.05M117.96 116.85L57.07 49.23M104.09 98.47L61.29 45.62M119.18 115.86L65.69 42.24M107.30 96.13L70.27 39.10M120.50 115.01L75.00 36.20M110.75 94.14L79.88 33.55M121.90 114.30L84.89 31.16M114.38 92.52L90.01 29.04M123.36 113.73L95.24 27.19M118.16 91.29L100.57 25.61M124.88 113.33L105.96 24.32M122.06 90.47L111.42 23.31M126.43 113.08L116.92 22.58M126.01 90.05L122.45 22.15" fill="none" stroke="#8d949d" stroke-opacity=".78" stroke-width=".55"/></g><circle cx="128" cy="34" r="3.7" fill="#8F9195"/><circle cx="140.27" cy="34.8" r="3.7" fill="#8F9195"/><circle cx="152.33" cy="37.2" r="3.7" fill="#8F9195"/><circle cx="163.97" cy="41.16" r="3.7" fill="#8F9195"/><circle cx="175" cy="46.59" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="175" cy="46.59" r="2.4" fill="#EF4135"/><circle cx="185.22" cy="53.42" r="3.7" fill="#8F9195"/><circle cx="194.47" cy="61.53" r="3.7" fill="#8F9195"/><circle cx="202.58" cy="70.78" r="3.7" fill="#8F9195"/><circle cx="209.41" cy="81" r="3.7" fill="#8F9195"/><circle cx="214.84" cy="92.03" r="3.7" fill="#8F9195"/><circle cx="218.8" cy="103.67" r="3.7" fill="#8F9195"/><circle cx="221.2" cy="115.73" r="3.7" fill="#8F9195"/><circle cx="222" cy="128" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="222" cy="128" r="2.4" fill="#EF4135"/><circle cx="221.2" cy="140.27" r="3.7" fill="#8F9195"/><circle cx="218.8" cy="152.33" r="3.7" fill="#8F9195"/><circle cx="214.84" cy="163.97" r="3.7" fill="#8F9195"/><circle cx="209.41" cy="175" r="3.7" fill="#8F9195"/><circle cx="202.58" cy="185.22" r="3.7" fill="#8F9195"/><circle cx="194.47" cy="194.47" r="3.7" fill="#8F9195"/><circle cx="185.22" cy="202.58" r="3.7" fill="#8F9195"/><circle cx="175" cy="209.41" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="175" cy="209.41" r="2.4" fill="#EF4135"/><circle cx="163.97" cy="214.84" r="3.7" fill="#8F9195"/><circle cx="152.33" cy="218.8" r="3.7" fill="#8F9195"/><circle cx="140.27" cy="221.2" r="3.7" fill="#8F9195"/><circle cx="128" cy="222" r="3.7" fill="#8F9195"/><circle cx="115.73" cy="221.2" r="3.7" fill="#8F9195"/><circle cx="103.67" cy="218.8" r="3.7" fill="#8F9195"/><circle cx="92.03" cy="214.84" r="3.7" fill="#8F9195"/><circle cx="81" cy="209.41" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="81" cy="209.41" r="2.4" fill="#EF4135"/><circle cx="70.78" cy="202.58" r="3.7" fill="#8F9195"/><circle cx="61.53" cy="194.47" r="3.7" fill="#8F9195"/><circle cx="53.42" cy="185.22" r="3.7" fill="#8F9195"/><circle cx="46.59" cy="175" r="3.7" fill="#8F9195"/><circle cx="41.16" cy="163.97" r="3.7" fill="#8F9195"/><circle cx="37.2" cy="152.33" r="3.7" fill="#8F9195"/><circle cx="34.8" cy="140.27" r="3.7" fill="#8F9195"/><circle cx="34" cy="128" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="34" cy="128" r="2.4" fill="#EF4135"/><circle cx="34.8" cy="115.73" r="3.7" fill="#8F9195"/><circle cx="37.2" cy="103.67" r="3.7" fill="#8F9195"/><circle cx="41.16" cy="92.03" r="3.7" fill="#8F9195"/><circle cx="46.59" cy="81" r="3.7" fill="#8F9195"/><circle cx="53.42" cy="70.78" r="3.7" fill="#8F9195"/><circle cx="61.53" cy="61.53" r="3.7" fill="#8F9195"/><circle cx="70.78" cy="53.42" r="3.7" fill="#8F9195"/><circle cx="81" cy="46.59" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="81" cy="46.59" r="2.4" fill="#EF4135"/><circle cx="92.03" cy="41.16" r="3.7" fill="#8F9195"/><circle cx="103.67" cy="37.2" r="3.7" fill="#8F9195"/><circle cx="115.73" cy="34.8" r="3.7" fill="#8F9195"/><use href="#rdb-R" transform="translate(0 4)" fill="#000" fill-opacity="0.6" filter="url(#rdb-shk)"/><use href="#rdb-R" transform="translate(2.2 3)" fill="#003a75"/><use href="#rdb-R" fill="url(#rdb-lgk)"/></svg></div><div class="face rb"><svg viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="#0055A4" fill-rule="evenodd" d="M4 128a124 124 0 1 0 248 0a124 124 0 1 0-248 0ZM22 128a106 106 0 1 0 212 0a106 106 0 1 0-212 0Z"/><path d="M128.00 22.00L128.00 4.30M133.55 22.15L134.47 4.47M139.08 22.58L140.93 4.98M144.58 23.31L147.35 5.82M150.04 24.32L153.72 7.00M155.43 25.61L160.02 8.51M160.76 27.19L166.23 10.35M165.99 29.04L172.33 12.52M171.11 31.16L178.31 14.99M176.12 33.55L184.16 17.78M181.00 36.20L189.85 20.87M185.73 39.10L195.37 24.26M190.31 42.24L200.71 27.92M194.71 45.62L205.85 31.87M198.93 49.23L210.77 36.07M202.95 53.05L215.47 40.53M206.77 57.07L219.93 45.23M210.38 61.29L224.13 50.15M213.76 65.69L228.08 55.29M216.90 70.27L231.74 60.63M219.80 75.00L235.13 66.15M222.45 79.88L238.22 71.84M224.84 84.89L241.01 77.69M226.96 90.01L243.48 83.67M228.81 95.24L245.65 89.77M230.39 100.57L247.49 95.98M231.68 105.96L249.00 102.28M232.69 111.42L250.18 108.65M233.42 116.92L251.02 115.07M233.85 122.45L251.53 121.53M234.00 128.00L251.70 128.00M233.85 133.55L251.53 134.47M233.42 139.08L251.02 140.93M232.69 144.58L250.18 147.35M231.68 150.04L249.00 153.72M230.39 155.43L247.49 160.02M228.81 160.76L245.65 166.23M226.96 165.99L243.48 172.33M224.84 171.11L241.01 178.31M222.45 176.12L238.22 184.16M219.80 181.00L235.13 189.85M216.90 185.73L231.74 195.37M213.76 190.31L228.08 200.71M210.38 194.71L224.13 205.85M206.77 198.93L219.93 210.77M202.95 202.95L215.47 215.47M198.93 206.77L210.77 219.93M194.71 210.38L205.85 224.13M190.31 213.76L200.71 228.08M185.73 216.90L195.37 231.74M181.00 219.80L189.85 235.13M176.12 222.45L184.16 238.22M171.11 224.84L178.31 241.01M165.99 226.96L172.33 243.48M160.76 228.81L166.23 245.65M155.43 230.39L160.02 247.49M150.04 231.68L153.72 249.00M144.58 232.69L147.35 250.18M139.08 233.42L140.93 251.02M133.55 233.85L134.47 251.53M128.00 234.00L128.00 251.70M122.45 233.85L121.53 251.53M116.92 233.42L115.07 251.02M111.42 232.69L108.65 250.18M105.96 231.68L102.28 249.00M100.57 230.39L95.98 247.49M95.24 228.81L89.77 245.65M90.01 226.96L83.67 243.48M84.89 224.84L77.69 241.01M79.88 222.45L71.84 238.22M75.00 219.80L66.15 235.13M70.27 216.90L60.63 231.74M65.69 213.76L55.29 228.08M61.29 210.38L50.15 224.13M57.07 206.77L45.23 219.93M53.05 202.95L40.53 215.47M49.23 198.93L36.07 210.77M45.62 194.71L31.87 205.85M42.24 190.31L27.92 200.71M39.10 185.73L24.26 195.37M36.20 181.00L20.87 189.85M33.55 176.12L17.78 184.16M31.16 171.11L14.99 178.31M29.04 165.99L12.52 172.33M27.19 160.76L10.35 166.23M25.61 155.43L8.51 160.02M24.32 150.04L7.00 153.72M23.31 144.58L5.82 147.35M22.58 139.08L4.98 140.93M22.15 133.55L4.47 134.47M22.00 128.00L4.30 128.00M22.15 122.45L4.47 121.53M22.58 116.92L4.98 115.07M23.31 111.42L5.82 108.65M24.32 105.96L7.00 102.28M25.61 100.57L8.51 95.98M27.19 95.24L10.35 89.77M29.04 90.01L12.52 83.67M31.16 84.89L14.99 77.69M33.55 79.88L17.78 71.84M36.20 75.00L20.87 66.15M39.10 70.27L24.26 60.63M42.24 65.69L27.92 55.29M45.62 61.29L31.87 50.15M49.23 57.07L36.07 45.23M53.05 53.05L40.53 40.53M57.07 49.23L45.23 36.07M61.29 45.62L50.15 31.87M65.69 42.24L55.29 27.92M70.27 39.10L60.63 24.26M75.00 36.20L66.15 20.87M79.88 33.55L71.84 17.78M84.89 31.16L77.69 14.99M90.01 29.04L83.67 12.52M95.24 27.19L89.77 10.35M100.57 25.61L95.98 8.51M105.96 24.32L102.28 7.00M111.42 23.31L108.65 5.82M116.92 22.58L115.07 4.98M122.45 22.15L121.53 4.47" fill="none" stroke="#8d949d" stroke-width=".6"/></svg></div><div class="face front"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Logo Radthal : un R bleu sur une piece bleue au rebord en relief, des fils gris titane du centre jusqu’au bord, des perles grises et six cibles rouges" viewBox="0 0 256 256"><defs><linearGradient id="rdc-rimk" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#0055A4"/><stop offset="0.3" stop-color="#0055A4"/><stop offset="0.65" stop-color="#0055A4"/><stop offset="1" stop-color="#0055A4"/></linearGradient><radialGradient id="rdc-facek" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#050b17"/><stop offset="0.55" stop-color="#050b17"/><stop offset="1" stop-color="#050b17"/></radialGradient><linearGradient id="rdc-lgk" gradientUnits="userSpaceOnUse" x1="0" y1="62" x2="0" y2="194"><stop offset="0" stop-color="#0055A4"/><stop offset="0.35" stop-color="#0055A4"/><stop offset="0.7" stop-color="#0055A4"/><stop offset="1" stop-color="#0055A4"/></linearGradient><radialGradient id="rdc-shinek" cx="30%" cy="22%" r="55%"><stop offset="0" stop-color="#fff" stop-opacity="0.28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><filter id="rdc-shk" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.2"/></filter><clipPath id="rdc-clipk"><circle cx="128" cy="128" r="106"/></clipPath><path id="rdc-R" d="M75 77.13 88.2 78.3C88.49 93.4 88.49 108.5 88.49 123.75V130.2C88.49 145.45 88.49 160.55 88.2 175.36L75 176.67V181.66H126.9V176.67L113.41 175.36C112.97 160.4 112.97 145.3 112.97 129.91H120.01C131.3 129.91 134.82 135.77 136.87 147.79L141.12 168.02C142.59 179.9 150.07 183.86 163.55 183.86C170.88 183.86 174.99 183.13 181 181.66V176.67L167.95 175.8L163.41 151.75C160.91 137.24 155.64 129.03 136.43 126.53C159.59 123.02 167.66 111.73 167.66 99.7C167.66 82.26 153.58 72.14 127.93 72.14H75ZM113.41 77.71H121.62C136.43 77.71 144.2 85.63 144.2 100.14C144.2 113.49 137.9 124.48 121.48 124.48H112.97C112.97 107.62 112.97 92.52 113.41 77.71Z"/></defs><circle cx="128" cy="128" r="106" fill="url(#rdc-facek)"/><clipPath id="rdc-clip-rayons"><circle cx="128" cy="128" r="106"/></clipPath><g clip-path="url(#rdc-clip-rayons)"><path d="M128.00 113.00L128.00 22.00M129.99 90.05L133.55 22.15M129.57 113.08L139.08 22.58M133.94 90.47L144.58 23.31M131.12 113.33L150.04 24.32M137.84 91.29L155.43 25.61M132.64 113.73L160.76 27.19M141.62 92.52L165.99 29.04M134.10 114.30L171.11 31.16M145.25 94.14L176.12 33.55M135.50 115.01L181.00 36.20M148.70 96.13L185.73 39.10M136.82 115.86L190.31 42.24M151.91 98.47L194.71 45.62M138.04 116.85L198.93 49.23M154.87 101.13L202.95 53.05M139.15 117.96L206.77 57.07M157.53 104.09L210.38 61.29M140.14 119.18L213.76 65.69M159.87 107.30L216.90 70.27M140.99 120.50L219.80 75.00M161.86 110.75L222.45 79.88M141.70 121.90L224.84 84.89M163.48 114.38L226.96 90.01M142.27 123.36L228.81 95.24M164.71 118.16L230.39 100.57M142.67 124.88L231.68 105.96M165.53 122.06L232.69 111.42M142.92 126.43L233.42 116.92M165.95 126.01L233.85 122.45M143.00 128.00L234.00 128.00M165.95 129.99L233.85 133.55M142.92 129.57L233.42 139.08M165.53 133.94L232.69 144.58M142.67 131.12L231.68 150.04M164.71 137.84L230.39 155.43M142.27 132.64L228.81 160.76M163.48 141.62L226.96 165.99M141.70 134.10L224.84 171.11M161.86 145.25L222.45 176.12M140.99 135.50L219.80 181.00M159.87 148.70L216.90 185.73M140.14 136.82L213.76 190.31M157.53 151.91L210.38 194.71M139.15 138.04L206.77 198.93M154.87 154.87L202.95 202.95M138.04 139.15L198.93 206.77M151.91 157.53L194.71 210.38M136.82 140.14L190.31 213.76M148.70 159.87L185.73 216.90M135.50 140.99L181.00 219.80M145.25 161.86L176.12 222.45M134.10 141.70L171.11 224.84M141.62 163.48L165.99 226.96M132.64 142.27L160.76 228.81M137.84 164.71L155.43 230.39M131.12 142.67L150.04 231.68M133.94 165.53L144.58 232.69M129.57 142.92L139.08 233.42M129.99 165.95L133.55 233.85M128.00 143.00L128.00 234.00M126.01 165.95L122.45 233.85M126.43 142.92L116.92 233.42M122.06 165.53L111.42 232.69M124.88 142.67L105.96 231.68M118.16 164.71L100.57 230.39M123.36 142.27L95.24 228.81M114.38 163.48L90.01 226.96M121.90 141.70L84.89 224.84M110.75 161.86L79.88 222.45M120.50 140.99L75.00 219.80M107.30 159.87L70.27 216.90M119.18 140.14L65.69 213.76M104.09 157.53L61.29 210.38M117.96 139.15L57.07 206.77M101.13 154.87L53.05 202.95M116.85 138.04L49.23 198.93M98.47 151.91L45.62 194.71M115.86 136.82L42.24 190.31M96.13 148.70L39.10 185.73M115.01 135.50L36.20 181.00M94.14 145.25L33.55 176.12M114.30 134.10L31.16 171.11M92.52 141.62L29.04 165.99M113.73 132.64L27.19 160.76M91.29 137.84L25.61 155.43M113.33 131.12L24.32 150.04M90.47 133.94L23.31 144.58M113.08 129.57L22.58 139.08M90.05 129.99L22.15 133.55M113.00 128.00L22.00 128.00M90.05 126.01L22.15 122.45M113.08 126.43L22.58 116.92M90.47 122.06L23.31 111.42M113.33 124.88L24.32 105.96M91.29 118.16L25.61 100.57M113.73 123.36L27.19 95.24M92.52 114.38L29.04 90.01M114.30 121.90L31.16 84.89M94.14 110.75L33.55 79.88M115.01 120.50L36.20 75.00M96.13 107.30L39.10 70.27M115.86 119.18L42.24 65.69M98.47 104.09L45.62 61.29M116.85 117.96L49.23 57.07M101.13 101.13L53.05 53.05M117.96 116.85L57.07 49.23M104.09 98.47L61.29 45.62M119.18 115.86L65.69 42.24M107.30 96.13L70.27 39.10M120.50 115.01L75.00 36.20M110.75 94.14L79.88 33.55M121.90 114.30L84.89 31.16M114.38 92.52L90.01 29.04M123.36 113.73L95.24 27.19M118.16 91.29L100.57 25.61M124.88 113.33L105.96 24.32M122.06 90.47L111.42 23.31M126.43 113.08L116.92 22.58M126.01 90.05L122.45 22.15" fill="none" stroke="#8d949d" stroke-opacity=".78" stroke-width=".55"/></g><circle cx="128" cy="34" r="3.7" fill="#8F9195"/><circle cx="140.27" cy="34.8" r="3.7" fill="#8F9195"/><circle cx="152.33" cy="37.2" r="3.7" fill="#8F9195"/><circle cx="163.97" cy="41.16" r="3.7" fill="#8F9195"/><circle cx="175" cy="46.59" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="175" cy="46.59" r="2.4" fill="#EF4135"/><circle cx="185.22" cy="53.42" r="3.7" fill="#8F9195"/><circle cx="194.47" cy="61.53" r="3.7" fill="#8F9195"/><circle cx="202.58" cy="70.78" r="3.7" fill="#8F9195"/><circle cx="209.41" cy="81" r="3.7" fill="#8F9195"/><circle cx="214.84" cy="92.03" r="3.7" fill="#8F9195"/><circle cx="218.8" cy="103.67" r="3.7" fill="#8F9195"/><circle cx="221.2" cy="115.73" r="3.7" fill="#8F9195"/><circle cx="222" cy="128" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="222" cy="128" r="2.4" fill="#EF4135"/><circle cx="221.2" cy="140.27" r="3.7" fill="#8F9195"/><circle cx="218.8" cy="152.33" r="3.7" fill="#8F9195"/><circle cx="214.84" cy="163.97" r="3.7" fill="#8F9195"/><circle cx="209.41" cy="175" r="3.7" fill="#8F9195"/><circle cx="202.58" cy="185.22" r="3.7" fill="#8F9195"/><circle cx="194.47" cy="194.47" r="3.7" fill="#8F9195"/><circle cx="185.22" cy="202.58" r="3.7" fill="#8F9195"/><circle cx="175" cy="209.41" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="175" cy="209.41" r="2.4" fill="#EF4135"/><circle cx="163.97" cy="214.84" r="3.7" fill="#8F9195"/><circle cx="152.33" cy="218.8" r="3.7" fill="#8F9195"/><circle cx="140.27" cy="221.2" r="3.7" fill="#8F9195"/><circle cx="128" cy="222" r="3.7" fill="#8F9195"/><circle cx="115.73" cy="221.2" r="3.7" fill="#8F9195"/><circle cx="103.67" cy="218.8" r="3.7" fill="#8F9195"/><circle cx="92.03" cy="214.84" r="3.7" fill="#8F9195"/><circle cx="81" cy="209.41" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="81" cy="209.41" r="2.4" fill="#EF4135"/><circle cx="70.78" cy="202.58" r="3.7" fill="#8F9195"/><circle cx="61.53" cy="194.47" r="3.7" fill="#8F9195"/><circle cx="53.42" cy="185.22" r="3.7" fill="#8F9195"/><circle cx="46.59" cy="175" r="3.7" fill="#8F9195"/><circle cx="41.16" cy="163.97" r="3.7" fill="#8F9195"/><circle cx="37.2" cy="152.33" r="3.7" fill="#8F9195"/><circle cx="34.8" cy="140.27" r="3.7" fill="#8F9195"/><circle cx="34" cy="128" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="34" cy="128" r="2.4" fill="#EF4135"/><circle cx="34.8" cy="115.73" r="3.7" fill="#8F9195"/><circle cx="37.2" cy="103.67" r="3.7" fill="#8F9195"/><circle cx="41.16" cy="92.03" r="3.7" fill="#8F9195"/><circle cx="46.59" cy="81" r="3.7" fill="#8F9195"/><circle cx="53.42" cy="70.78" r="3.7" fill="#8F9195"/><circle cx="61.53" cy="61.53" r="3.7" fill="#8F9195"/><circle cx="70.78" cy="53.42" r="3.7" fill="#8F9195"/><circle cx="81" cy="46.59" r="7.4" fill="#02122a" stroke="#EF4135" stroke-width="3.2"/><circle cx="81" cy="46.59" r="2.4" fill="#EF4135"/><circle cx="92.03" cy="41.16" r="3.7" fill="#8F9195"/><circle cx="103.67" cy="37.2" r="3.7" fill="#8F9195"/><circle cx="115.73" cy="34.8" r="3.7" fill="#8F9195"/><use href="#rdc-R" transform="translate(0 4)" fill="#000" fill-opacity="0.6" filter="url(#rdc-shk)"/><use href="#rdc-R" transform="translate(2.2 3)" fill="#003a75"/><use href="#rdc-R" fill="url(#rdc-lgk)"/></svg></div><div class="face rf"><svg viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="#0055A4" fill-rule="evenodd" d="M4 128a124 124 0 1 0 248 0a124 124 0 1 0-248 0ZM22 128a106 106 0 1 0 212 0a106 106 0 1 0-212 0Z"/><path d="M128.00 22.00L128.00 4.30M133.55 22.15L134.47 4.47M139.08 22.58L140.93 4.98M144.58 23.31L147.35 5.82M150.04 24.32L153.72 7.00M155.43 25.61L160.02 8.51M160.76 27.19L166.23 10.35M165.99 29.04L172.33 12.52M171.11 31.16L178.31 14.99M176.12 33.55L184.16 17.78M181.00 36.20L189.85 20.87M185.73 39.10L195.37 24.26M190.31 42.24L200.71 27.92M194.71 45.62L205.85 31.87M198.93 49.23L210.77 36.07M202.95 53.05L215.47 40.53M206.77 57.07L219.93 45.23M210.38 61.29L224.13 50.15M213.76 65.69L228.08 55.29M216.90 70.27L231.74 60.63M219.80 75.00L235.13 66.15M222.45 79.88L238.22 71.84M224.84 84.89L241.01 77.69M226.96 90.01L243.48 83.67M228.81 95.24L245.65 89.77M230.39 100.57L247.49 95.98M231.68 105.96L249.00 102.28M232.69 111.42L250.18 108.65M233.42 116.92L251.02 115.07M233.85 122.45L251.53 121.53M234.00 128.00L251.70 128.00M233.85 133.55L251.53 134.47M233.42 139.08L251.02 140.93M232.69 144.58L250.18 147.35M231.68 150.04L249.00 153.72M230.39 155.43L247.49 160.02M228.81 160.76L245.65 166.23M226.96 165.99L243.48 172.33M224.84 171.11L241.01 178.31M222.45 176.12L238.22 184.16M219.80 181.00L235.13 189.85M216.90 185.73L231.74 195.37M213.76 190.31L228.08 200.71M210.38 194.71L224.13 205.85M206.77 198.93L219.93 210.77M202.95 202.95L215.47 215.47M198.93 206.77L210.77 219.93M194.71 210.38L205.85 224.13M190.31 213.76L200.71 228.08M185.73 216.90L195.37 231.74M181.00 219.80L189.85 235.13M176.12 222.45L184.16 238.22M171.11 224.84L178.31 241.01M165.99 226.96L172.33 243.48M160.76 228.81L166.23 245.65M155.43 230.39L160.02 247.49M150.04 231.68L153.72 249.00M144.58 232.69L147.35 250.18M139.08 233.42L140.93 251.02M133.55 233.85L134.47 251.53M128.00 234.00L128.00 251.70M122.45 233.85L121.53 251.53M116.92 233.42L115.07 251.02M111.42 232.69L108.65 250.18M105.96 231.68L102.28 249.00M100.57 230.39L95.98 247.49M95.24 228.81L89.77 245.65M90.01 226.96L83.67 243.48M84.89 224.84L77.69 241.01M79.88 222.45L71.84 238.22M75.00 219.80L66.15 235.13M70.27 216.90L60.63 231.74M65.69 213.76L55.29 228.08M61.29 210.38L50.15 224.13M57.07 206.77L45.23 219.93M53.05 202.95L40.53 215.47M49.23 198.93L36.07 210.77M45.62 194.71L31.87 205.85M42.24 190.31L27.92 200.71M39.10 185.73L24.26 195.37M36.20 181.00L20.87 189.85M33.55 176.12L17.78 184.16M31.16 171.11L14.99 178.31M29.04 165.99L12.52 172.33M27.19 160.76L10.35 166.23M25.61 155.43L8.51 160.02M24.32 150.04L7.00 153.72M23.31 144.58L5.82 147.35M22.58 139.08L4.98 140.93M22.15 133.55L4.47 134.47M22.00 128.00L4.30 128.00M22.15 122.45L4.47 121.53M22.58 116.92L4.98 115.07M23.31 111.42L5.82 108.65M24.32 105.96L7.00 102.28M25.61 100.57L8.51 95.98M27.19 95.24L10.35 89.77M29.04 90.01L12.52 83.67M31.16 84.89L14.99 77.69M33.55 79.88L17.78 71.84M36.20 75.00L20.87 66.15M39.10 70.27L24.26 60.63M42.24 65.69L27.92 55.29M45.62 61.29L31.87 50.15M49.23 57.07L36.07 45.23M53.05 53.05L40.53 40.53M57.07 49.23L45.23 36.07M61.29 45.62L50.15 31.87M65.69 42.24L55.29 27.92M70.27 39.10L60.63 24.26M75.00 36.20L66.15 20.87M79.88 33.55L71.84 17.78M84.89 31.16L77.69 14.99M90.01 29.04L83.67 12.52M95.24 27.19L89.77 10.35M100.57 25.61L95.98 8.51M105.96 24.32L102.28 7.00M111.42 23.31L108.65 5.82M116.92 22.58L115.07 4.98M122.45 22.15L121.53 4.47" fill="none" stroke="#8d949d" stroke-width=".6"/></svg><div class="shine"></div></div></div></div></div></div>
+  </div>
+
+  <dl class="facts">
+    <div><dt><span class="fr">Algorithme</span><span class="en">Algorithm</span></dt><dd>SHA-256</dd></div>
+    <div><dt><span class="fr">Blocs</span><span class="en">Blocks</span></dt><dd><span class="fr">10 min visées</span><span class="en">10 min target</span></dd></div>
+    <div><dt><span class="fr">Port réseau</span><span class="en">P2P port</span></dt><dd>9333</dd></div>
+    <div><dt><span class="fr">Genèse</span><span class="en">Genesis</span></dt><dd><span class="fr">3 oct. 2026</span><span class="en">Oct 3, 2026</span></dd></div>
+    <div><dt><span class="fr">Part du créateur</span><span class="en">Creator share</span></dt><dd><span class="fr">2&nbsp;% dès le bloc 25&nbsp;000</span><span class="en">2% from block 25,000</span></dd></div>
+  </dl>
+  </div>
+
+  <section id="peuple">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">Une monnaie pour le peuple</span><span class="en">A currency for the people</span></h2>
+      <p class="fr">Radthal repose sur une idée simple : un argent que chacun peut faire tourner, vérifier et envoyer, sans demander la permission à personne.</p><p class="en">Radthal rests on a simple idea: money that anyone can run, check and send, without asking anyone’s permission.</p>
+    </div>
+    <div class="pillars">
+      <div class="pillar"><div class="n">01</div><h3><span class="fr">Sans permission</span><span class="en">No permission</span></h3>
+        <p class="fr">Pas de guichet ni de formulaire : on télécharge le logiciel, on lance un nœud, on mine, on envoie.</p><p class="en">No counter, no form: you download the software, start a node, mine and send.</p></div>
+      <div class="pillar"><div class="n">02</div><h3><span class="fr">Sans intermédiaire</span><span class="en">No middleman</span></h3>
+        <p class="fr">Vos clés restent chez vous. Aucune banque, aucune plateforme entre vous et vos RDT.</p><p class="en">Your keys stay with you. No bank, no platform between you and your RDT.</p></div>
+      <div class="pillar"><div class="n">03</div><h3><span class="fr">Lisible par tous</span><span class="en">Readable by all</span></h3>
+        <p class="fr">Un seul fichier de modifications, un code libre (licence MIT). Rien de caché : chacun peut vérifier.</p><p class="en">One change file, free code (MIT license). Nothing hidden: anyone can check.</p></div>
+      <div class="pillar"><div class="n">04</div><h3><span class="fr">Même sans Internet</span><span class="en">Even offline</span></h3>
+        <div class="tag"><span class="fr">En développement · pas encore disponible</span><span class="en">In development · not available yet</span></div>
+        <p class="fr">Faire circuler de petits paiements par radio quand le réseau est coupé. <a href="#radio">Comment ça pourrait marcher.</a></p><p class="en">Moving small payments over radio when the network is down. <a href="#radio">How it could work.</a></p></div>
+    </div>
+    <div class="call">
+      <p class="fr">Un réseau n’est fort que de ceux qui le font tourner. Aujourd’hui, un seul nœud est connu : le vôtre manque.</p><p class="en">A network is only as strong as the people running it. Today, a single node is known: yours is missing.</p>
+      <a class="btn main" href="#participer"><span class="fr">Rejoindre le réseau</span><span class="en">Join the network</span></a>
+    </div>
+  </section>
+
+  <section id="objectifs">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">Pourquoi Radthal</span><span class="en">Why Radthal</span></h2>
+      <p class="fr">Sur Bitcoin, un mineur de salon n’a pratiquement aucune chance de trouver un bloc en solo : le réseau est des millions de fois plus puissant. Radthal reprend les mêmes règles sur une chaîne neuve et minuscule, où un seul mineur domestique compte encore et où l’on peut tout observer de près.</p><p class="en">On Bitcoin, a living-room miner has practically no chance of finding a block solo: the network is millions of times more powerful. Radthal reuses the same rules on a new, tiny chain, where a single home miner still matters and where everything can be observed up close.</p>
+    </div>
+    <div class="grid2">
+      <article class="card"><h3><span class="fr">Apprendre en faisant</span><span class="en">Learn by doing</span></h3>
+        <p class="fr">Faire tourner un nœud complet, créer un portefeuille, miner avec un petit ASIC ou un Bitaxe : chaque étape est expliquée, en français et en anglais. <a href="#demo">Essayez d’abord de miner un bloc ici.</a></p><p class="en">Run a full node, create a wallet, mine with a small ASIC or a Bitaxe: every step is explained, in French and in English. <a href="#demo">First, try mining a block here.</a></p></article>
+      <article class="card"><h3><span class="fr">Tout est lisible</span><span class="en">Everything is readable</span></h3>
+        <p class="fr">Les règles de Bitcoin, plus un seul fichier de modifications, <code>radthal.patch</code>, qui contient chaque différence avec Bitcoin Core. Logiciel libre, licence MIT.</p><p class="en">Bitcoin’s rules, plus a single change file, <code>radthal.patch</code>, holding every difference from Bitcoin Core. Free software, MIT license.</p></article>
+      <article class="card"><h3><span class="fr">Des outils concrets</span><span class="en">Practical tools</span></h3>
+        <p class="fr">Tableau de bord, mempool, statistiques du pool, portefeuille, horodatage de documents et messages courts écrits dans la chaîne, sous forme de pages pour Umbrel.</p><p class="en">Dashboard, mempool, pool statistics, wallet, document timestamping and short messages written in the chain, as pages for Umbrel.</p></article>
+      <article class="card"><h3><span class="fr">Ouvert à tous</span><span class="en">Open to everyone</span></h3>
+        <p class="fr">Un nœud tourne sur un PC ou un Raspberry Pi, et un téléphone Android peut vérifier la chaîne. Plus il y a de nœuds et de mineurs honnêtes, plus la chaîne est difficile à réécrire.</p><p class="en">A node runs on a PC or a Raspberry Pi, and an Android phone can verify the chain. The more honest nodes and miners there are, the harder the chain is to rewrite.</p></article>
+      <article class="card idea"><div class="tag"><span class="fr">En développement · pas encore disponible</span><span class="en">In development · not available yet</span></div>
+        <h3><span class="fr">Payer sans connexion Internet</span><span class="en">Paying without an Internet connection</span></h3>
+        <p class="fr">Faire passer de petites transactions par radio longue portée (LoRa), pour qu’un paiement reste possible quand Internet manque. Ce projet est en développement : ce site ne promet pas qu’il aboutira. <a href="#radio">Voir comment ça pourrait marcher.</a></p><p class="en">Sending small transactions over long-range radio (LoRa), so that a payment stays possible when the Internet is out. This project is in development: this site does not promise it will succeed. <a href="#radio">See how it could work.</a></p></article>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">Minez un bloc, ici, maintenant</span><span class="en">Mine a block, right here</span></h2>
+      <p class="fr">Une petite démonstration dans votre navigateur, pour comprendre ce qu’est une chaîne de blocs. C’est une simulation : ce n’est pas la vraie chaîne Radthal, et aucun RDT n’est créé.</p><p class="en">A small demo in your browser, to understand what a blockchain is. It is a simulation: this is not the real Radthal chain, and no RDT is created.</p>
+    </div>
+    <noscript><p class="note"><span class="fr">Cette démonstration a besoin de JavaScript.</span><span class="en">This demo needs JavaScript.</span></p></noscript>
+    <div class="dchain" id="dchain"></div>
+    <div class="dbar">
+      <button class="btn main" id="d-all" type="button"><span class="fr">Tout miner</span><span class="en">Mine all</span></button>
+      <button class="btn alt" id="d-reset" type="button"><span class="fr">Recommencer</span><span class="en">Start over</span></button>
+      <p class="dstatus" id="dstatus" role="status" aria-live="polite"></p>
+    </div>
+    <ol class="hops">
+      <li><span class="fr"><strong>Miner</strong>, c’est essayer des nombres (le «&nbsp;nonce&nbsp;») jusqu’à ce que l’empreinte du bloc commence par trois zéros. Il n’y a pas de raccourci : il faut essayer, des milliers de fois.</span><span class="en"><strong>Mining</strong> means trying numbers (the “nonce”) until the block’s fingerprint starts with three zeros. There is no shortcut: you have to try, thousands of times.</span></li>
+      <li><span class="fr"><strong>Chaque bloc</strong> contient l’empreinte du précédent. Changez le texte d’un bloc : son empreinte change, celle du suivant aussi, et tous les blocs d’après deviennent invalides.</span><span class="en"><strong>Each block</strong> contains the previous block’s fingerprint. Change a block’s text: its fingerprint changes, so does the next one, and every block after it becomes invalid.</span></li>
+      <li><span class="fr"><strong>Réécrire l’histoire</strong> oblige à tout re-miner, bloc après bloc, plus vite que le reste du réseau. C’est ce travail qui protège la chaîne. Sur le vrai réseau, il demande des milliards d’essais par seconde.</span><span class="en"><strong>Rewriting history</strong> means mining everything again, block after block, faster than the rest of the network. That work is what protects the chain. On the real network it takes billions of tries per second.</span></li>
+    </ol>
+    <template id="tpl-blk">
+      <article class="blk" data-state="bad">
+        <header><span class="num"><span class="fr">Bloc</span><span class="en">Block</span> <b data-h></b></span>
+          <span class="st"><span class="s s-ok"><span class="fr">Valide</span><span class="en">Valid</span></span><span class="s s-bad"><span class="fr">À miner</span><span class="en">To mine</span></span></span></header>
+        <label><span class="fr">Texte du bloc</span><span class="en">Block text</span><input data-data type="text" maxlength="40" autocomplete="off" spellcheck="false"></label>
+        <dl>
+          <dt><span class="fr">Empreinte du bloc précédent</span><span class="en">Previous block fingerprint</span></dt><dd data-prev class="mono"></dd>
+          <dt><span class="fr">Nonce</span><span class="en">Nonce</span></dt><dd data-nonce class="mono"></dd>
+          <dt><span class="fr">Empreinte de ce bloc</span><span class="en">This block’s fingerprint</span></dt><dd data-hash class="mono"></dd>
+        </dl>
+        <button class="btn alt sm" data-mine type="button"><span class="lm"><span class="fr">Miner</span><span class="en">Mine</span></span><span class="ls"><span class="fr">Arrêter</span><span class="en">Stop</span></span></button>
+      </article>
+    </template>
+  </section>
+
+  <section id="radio">
+    <div class="sec-head"><div class="pearls"></div>
+      <div class="tag"><span class="fr">En développement · pas encore disponible</span><span class="en">In development · not available yet</span></div>
+      <h2><span class="fr">Même sans Internet : la radio</span><span class="en">Even without the Internet: radio</span></h2>
+      <p class="fr">Le projet : qu’un paiement puisse circuler par radio quand Internet est coupé. Il est en développement et n’est pas encore disponible. Radthal reprend le format de transaction de Bitcoin, et des projets expérimentaux montrent que c’est faisable.</p><p class="en">The project: a payment that can travel over radio when the Internet is down. It is in development and not available yet. Radthal reuses Bitcoin’s transaction format, and experimental projects show it can be done.</p>
+    </div>
+    <div class="radiofig"><svg viewBox="0 0 960 222" aria-hidden="true" focusable="false"><circle class="rf-wv" cx="100" cy="66" r="16" style="animation-delay:0.0s"/><circle class="rf-wv" cx="100" cy="66" r="28" style="animation-delay:1.2s"/><circle class="rf-wv" cx="100" cy="66" r="40" style="animation-delay:2.4s"/><circle class="rf-wv" cx="330" cy="66" r="16" style="animation-delay:0.5s"/><circle class="rf-wv" cx="330" cy="66" r="28" style="animation-delay:1.7s"/><circle class="rf-wv" cx="330" cy="66" r="40" style="animation-delay:2.9s"/><circle class="rf-wv" cx="590" cy="66" r="16" style="animation-delay:1.0s"/><circle class="rf-wv" cx="590" cy="66" r="28" style="animation-delay:2.2s"/><circle class="rf-wv" cx="590" cy="66" r="40" style="animation-delay:3.4s"/><path class="rf-line" d="M100 66 L330 66 L590 66 L796 104"/><rect class="rf-sh" x="70" y="72" width="60" height="112" rx="12"/><line class="rf-sh" x1="90" y1="86" x2="110" y2="86"/><circle cx="100" cy="132" r="12" fill="none" stroke="var(--red)" stroke-width="3.5"/><circle class="rf-dot" cx="100" cy="132" r="3.5"/><path class="rf-sh" d="M330 74 L306 190 M330 74 L354 190 M315 150 L345 150 M321 118 L339 118 M296 190 L364 190"/><circle class="rf-dot" cx="330" cy="66" r="7"/><path class="rf-sh" d="M590 74 L566 190 M590 74 L614 190 M575 150 L605 150 M581 118 L599 118 M556 190 L624 190"/><circle class="rf-dot" cx="590" cy="66" r="7"/><rect class="rf-sh" x="796" y="104" width="124" height="86" rx="14"/><circle cx="858" cy="140" r="13" fill="none" stroke="var(--red)" stroke-width="3.5"/><circle class="rf-dot" cx="858" cy="140" r="3.5"/><circle cx="826" cy="175" r="3" fill="var(--pearl)"/><circle cx="840" cy="175" r="3" fill="var(--pearl)"/><circle cx="854" cy="175" r="3" fill="var(--pearl)"/><circle class="rf-pk" cx="100" cy="66" r="6" style="--dx:230px;--dy:0px;animation-delay:0.0s"/><circle class="rf-pk" cx="330" cy="66" r="6" style="--dx:260px;--dy:0px;animation-delay:1.5s"/><circle class="rf-pk" cx="590" cy="66" r="6" style="--dx:206px;--dy:38px;animation-delay:3.0s"/></svg></div>
+    <ol class="hops">
+      <li><span class="fr"><strong>Vous signez</strong> le paiement sur votre téléphone ou votre ordinateur, hors ligne. Une transaction simple fait quelques centaines d’octets.</span><span class="en"><strong>You sign</strong> the payment on your phone or computer, offline. A simple transaction is a few hundred bytes.</span></li>
+      <li><span class="fr"><strong>Les relais LoRa</strong> se passent le message, découpé en petits paquets, sur une bande libre (868 MHz en Europe), de relais en relais.</span><span class="en"><strong>LoRa relays</strong> pass the message along, cut into small packets, on a free band (868 MHz in Europe), hop after hop.</span></li>
+      <li><span class="fr"><strong>Une passerelle</strong>, c’est-à-dire un nœud Radthal, reconstitue le paiement et le diffuse sur le réseau.</span><span class="en"><strong>A gateway</strong>, meaning a Radthal node, reassembles the payment and broadcasts it to the network.</span></li>
+    </ol>
+    <div class="grid2" style="margin-top:22px">
+      <article class="card"><h3><span class="fr">Ce qui existe déjà ailleurs</span><span class="en">What already exists elsewhere</span></h3>
+        <p class="fr">Pour Bitcoin, des projets expérimentaux (btcmesh, txTenna…) envoient une transaction signée par radio LoRa, de relais en relais, jusqu’à une passerelle reliée à un nœud. Des satellites diffusent aussi la chaîne Bitcoin à ceux qui n’ont pas Internet.</p><p class="en">For Bitcoin, experimental projects (btcmesh, txTenna…) send a signed transaction over LoRa radio, hop by hop, to a gateway connected to a node. Satellites also broadcast the Bitcoin chain to people without Internet.</p></article>
+      <article class="card"><h3><span class="fr">Ce qu’il reste à faire pour Radthal</span><span class="en">What is left to do for Radthal</span></h3>
+        <p class="fr">Essayer ces outils avec un nœud Radthal comme passerelle (le format est le même, donc ça devrait marcher, mais ce n’est pas testé), écrire un guide, puis faire un vrai essai sur le terrain avec deux ou trois relais.</p><p class="en">Try these tools with a Radthal node as the gateway (the format is the same, so it should work, but it is untested), write a guide, then run a real field test with two or three relays.</p></article>
+      <article class="card" style="grid-column:1/-1"><h3><span class="fr">Les limites, honnêtement</span><span class="en">The limits, honestly</span></h3>
+        <ul class="plain">
+          <li><span class="fr">Une passerelle reliée au réseau reste nécessaire : la radio seule ne crée pas un réseau Radthal.</span><span class="en">A gateway connected to the network is still required: radio alone does not create a Radthal network.</span></li>
+          <li><span class="fr">Le débit est minuscule : un petit paiement à la fois, pas de gros échanges.</span><span class="en">Bandwidth is tiny: one small payment at a time, no bulk transfers.</span></li>
+          <li><span class="fr">La bande 868 MHz est libre mais encadrée : puissance et temps d’émission sont limités, et la règle dépend du pays. Vérifiez-la avant d’émettre.</span><span class="en">The 868 MHz band is free but regulated: power and transmit time are limited, and the rule depends on the country. Check it before transmitting.</span></li>
+          <li><span class="fr">Les radioamateurs n’ont en général pas le droit d’utiliser leurs fréquences pour des paiements.</span><span class="en">Amateur radio operators generally may not use their frequencies for payments.</span></li>
+        </ul>
+        <p class="note" style="margin-top:6px"><span class="fr">Exemples de matériel : pour un relais extérieur, le Heltec MeshTower V2 (relais LoRa solaire en 868 MHz, environ 10 km en vue directe selon le fabricant) ; pour la poche, un terminal LoRa comme l’Elecrow ThinkNode M9 (868 MHz, clavier, sans smartphone). Ces appareils transportent des messages : aucun n’a été testé avec Radthal, et il faudra un logiciel pour y faire passer des transactions.</span><span class="en">Example hardware: for an outdoor relay, the Heltec MeshTower V2 (solar LoRa relay on 868 MHz, about 10 km line of sight according to the maker); for the pocket, a LoRa terminal such as the Elecrow ThinkNode M9 (868 MHz, keyboard, no smartphone). These devices carry messages: none has been tested with Radthal, and software will be needed to pass transactions through them.</span></p></article>
+    </div>
+  </section>
+
+  <section id="reseau">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">Le réseau en chiffres</span><span class="en">The network in numbers</span></h2>
+      <p class="fr">Le fichier <code>radthal.patch</code> fait foi : il contient toutes les modifications par rapport à Bitcoin Core.</p><p class="en">The <code>radthal.patch</code> file is authoritative: it contains every change relative to Bitcoin Core.</p>
+    </div>
+    <dl class="spec">
+      <dt><span class="fr">Base de code</span><span class="en">Code base</span></dt><dd>Bitcoin Core v31.1 + radthal.patch</dd>
+      <dt><span class="fr">Minage</span><span class="en">Mining</span></dt><dd>SHA-256<small><span class="fr">Les ASIC Bitcoin fonctionnent.</span><span class="en">Bitcoin ASICs work.</span></small></dd>
+      <dt><span class="fr">Rythme</span><span class="en">Pace</span></dt><dd><span class="fr">Blocs de 10 minutes visées</span><span class="en">10-minute block target</span><small><span class="fr">Difficulté ajustée tous les 2&nbsp;016 blocs. Halving tous les 210&nbsp;000 blocs.</span><span class="en">Difficulty retargets every 2,016 blocks. Halving every 210,000 blocks.</span></small></dd>
+      <dt><span class="fr">Récompense de départ</span><span class="en">Starting reward</span></dt><dd>50 RDT</dd>
+      <dt><span class="fr">Port réseau (P2P)</span><span class="en">Network (P2P) port</span></dt><dd>9333</dd>
+      <dt><span class="fr">Adresses</span><span class="en">Addresses</span></dt><dd>rdt1… (bech32)</dd>
+      <dt><span class="fr">Octets magiques</span><span class="en">Magic bytes</span></dt><dd>52 44 54 31 («&nbsp;RDT1&nbsp;»)</dd>
+      <dt><span class="fr">Activations</span><span class="en">Activations</span></dt><dd>SegWit, Taproot<small><span class="fr">Actifs dès le départ.</span><span class="en">Active from the start.</span></small></dd>
+      <dt><span class="fr">Bloc de genèse</span><span class="en">Genesis block</span></dt><dd><span class="fr">3 octobre 2026, 00:00 UTC</span><span class="en">October 3, 2026, 00:00 UTC</span><small>«&nbsp;Radthal 03/Oct/2026 premier bloc&nbsp;»</small></dd>
+      <dt><span class="fr">Hash de la genèse</span><span class="en">Genesis hash</span></dt><dd id="gen">00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198</dd>
+    </dl>
+    <div class="row" style="margin-top:14px"><button class="copy" type="button" data-copy="00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198" data-target="gen"><span class="fr">Copier</span><span class="en">Copy</span></button>
+      <span class="note" style="margin:0"><span class="fr">Sur votre nœud : <code>getblockhash 0</code> doit afficher ce hash. Sinon, vous n’êtes pas sur la bonne chaîne.</span><span class="en">On your node, <code>getblockhash 0</code> must print this hash. If not, you are not on the right chain.</span></span></div>
+  </section>
+
+  <section id="reperes">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">Les repères de la chaîne</span><span class="en">Milestones</span></h2></div>
+    <ol class="rail">
+      <li><div class="h">0</div><div class="k"><span class="fr">3 octobre 2026</span><span class="en">October 3, 2026</span></div>
+        <p class="fr">Le bloc de genèse. Tout part de là.</p><p class="en">The genesis block. Everything starts here.</p></li>
+      <li><div class="h">20&nbsp;300</div><div class="k"><span class="fr">Point de contrôle</span><span class="en">Checkpoint</span></div>
+        <p class="fr">Ce bloc doit avoir un hash précis, et aucune branche ne peut se greffer sous lui : une chaîne concurrente ne peut plus réécrire l’historique d’avant. Cette règle repose sur la confiance dans le créateur du projet.</p><p class="en">This block must have one exact hash, and no branch can attach below it: a competing chain can no longer rewrite earlier history. This rule relies on trusting the project’s creator.</p>
+        <p class="mono" style="font-size:13px;overflow-wrap:anywhere">000000000000011f952520848001cef3f59c00afe6539290469827aefc1e77c3</p></li>
+      <li><div class="h">25&nbsp;000</div><div class="k"><span class="fr">Part du créateur</span><span class="en">Creator share</span></div>
+        <p class="fr">À partir de ce bloc, 2&nbsp;% de chaque récompense va au créateur du projet. <a href="#transparence">Détails plus bas.</a></p><p class="en">From this block on, 2% of every reward goes to the project’s creator. <a href="#transparence">Details below.</a></p></li>
+      <li><div class="h">210&nbsp;000</div><div class="k"><span class="fr">Premier halving</span><span class="en">First halving</span></div>
+        <p class="fr">La récompense par bloc est divisée par deux, comme sur Bitcoin.</p><p class="en">The reward per block is cut in half, as on Bitcoin.</p></li>
+    </ol>
+    <p class="note"><span class="fr">Entre ces repères, la difficulté est réajustée tous les 2&nbsp;016 blocs.</span><span class="en">Between these milestones, the difficulty readjusts every 2,016 blocks.</span></p>
+  </section>
+
+  <section id="participer">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">Participer</span><span class="en">Join in</span></h2>
+      <p class="fr">Il y a trois façons d’aider, de la plus simple à la plus technique.</p><p class="en">There are three ways to help, from the simplest to the most technical.</p>
+    </div>
+    <div class="grid2">
+      <article class="card" style="grid-column:1/-1"><h3><span class="fr">Faire tourner un nœud</span><span class="en">Run a node</span></h3>
+        <p class="fr">Il faut un ordinateur ou un Raspberry Pi sous Linux, avec Docker. La première fois, Docker compile Bitcoin Core : quelques dizaines de minutes sur un PC, plus d’une heure sur un Raspberry Pi.</p><p class="en">You need a computer or a Raspberry Pi running Linux, with Docker. The first time, Docker compiles Bitcoin Core: a few tens of minutes on a PC, over an hour on a Raspberry Pi.</p>
+        <pre id="cmd">git clone https://github.com/bryancarterdouglas/radthal.git
+cd radthal &amp;&amp; cp env.example .env
+docker compose up -d --build</pre>
+        <div class="row"><button class="copy" type="button" data-copy="git clone https://github.com/bryancarterdouglas/radthal.git
+cd radthal &amp;&amp; cp env.example .env
+docker compose up -d --build" data-target="cmd"><span class="fr">Copier</span><span class="en">Copy</span></button>
+          <a class="fr more" href="https://github.com/bryancarterdouglas/radthal#installation" target="_blank" rel="noopener">Guide complet</a><a class="en more" href="https://github.com/bryancarterdouglas/radthal/blob/main/README.en.md#installation" target="_blank" rel="noopener">Full guide</a></div></article>
+      <article class="card"><h3><span class="fr">Miner en solo</span><span class="en">Mine solo</span></h3>
+        <p class="fr">Un mineur SHA-256 (Avalon, Antminer, Bitaxe…) se branche sur ckpool, un petit serveur de minage qui tourne à côté du nœud. Quand il trouve un bloc, 98&nbsp;% de la récompense va à votre adresse et 2&nbsp;% au créateur, à partir du bloc 25&nbsp;000.</p><p class="en">A SHA-256 miner (Avalon, Antminer, Bitaxe…) connects to ckpool, a small mining server that runs next to the node. When it finds a block, 98% of the reward goes to your address and 2% to the creator, from block 25,000.</p>
+        <a class="fr more" href="https://github.com/bryancarterdouglas/radthal/blob/main/MINER.md" target="_blank" rel="noopener">Guide de minage</a><a class="en more" href="https://github.com/bryancarterdouglas/radthal/blob/main/MINER.en.md" target="_blank" rel="noopener">Mining guide</a></article>
+      <article class="card"><h3><span class="fr">Pages pour Umbrel</span><span class="en">Umbrel pages</span></h3>
+        <p class="fr">Six petites pages : nœud, tableau de bord, mempool, ckpool, portefeuille, horodatage. Elles ont été faites pour le Raspberry Pi du créateur : ce n’est pas encore une installation en un clic.</p><p class="en">Six small pages: node, dashboard, mempool, ckpool, wallet, timestamping. They were made for the creator’s Raspberry Pi: this is not a one-click install yet.</p>
+        <a class="more" href="https://github.com/bryancarterdouglas/Umbrel-radthal" target="_blank" rel="noopener"><span class="fr">Boutique d’applications</span><span class="en">App store repository</span></a></article>
+    </div>
+  </section>
+
+  <section id="captures">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">Ce que ça donne</span><span class="en">What it looks like</span></h2></div>
+    <ul class="shots"><li><figure><button class="zoom" type="button"><img src="interface-tableau-de-bord.jpg" alt="Tableau de bord Radthal" data-alt-fr="Tableau de bord Radthal" data-alt-en="Radthal dashboard" width="1000" height="1431"><span class="sr-only"><span class="fr">Agrandir l’image</span><span class="en">Enlarge the image</span></span></button><figcaption><span class="fr">Tableau de bord : derniers blocs, difficulté, puissance du réseau</span><span class="en">Dashboard: latest blocks, difficulty, network power</span></figcaption></figure></li><li><figure><button class="zoom" type="button"><img src="interface-ckpool.jpg" alt="Page du pool ckpool" data-alt-fr="Page du pool ckpool" data-alt-en="ckpool pool page" width="1000" height="1597"><span class="sr-only"><span class="fr">Agrandir l’image</span><span class="en">Enlarge the image</span></span></button><figcaption><span class="fr">Le pool de minage en solo : hashrate, parts acceptées</span><span class="en">The solo mining pool: hashrate, accepted shares</span></figcaption></figure></li><li><figure><button class="zoom" type="button"><img src="interface-noeud.jpg" alt="Page du nœud" data-alt-fr="Page du nœud" data-alt-en="Node page" width="1000" height="1066"><span class="sr-only"><span class="fr">Agrandir l’image</span><span class="en">Enlarge the image</span></span></button><figcaption><span class="fr">Le nœud : synchronisation, connexions, pairs</span><span class="en">The node: sync, connections, peers</span></figcaption></figure></li></ul>
+    <p class="note"><span class="fr">Captures d’un nœud en marche : solde masqué, adresse du réseau local remplacée.</span><span class="en">Screenshots of a running node: balance hidden, local network address replaced.</span></p>
+  </section>
+
+  <section id="transparence">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">La part du créateur : 2&nbsp;%</span><span class="en">The creator’s share: 2%</span></h2></div>
+    <div class="split">
+      <div>
+        <p class="fr">À partir du bloc 25&nbsp;000, chaque bloc verse 2&nbsp;% de sa récompense, soit 1 RDT sur 50, à l’adresse du créateur. Les 98&nbsp;% restants vont au mineur. Aucun RDT n’est ajouté : la part est prélevée sur la récompense, la quantité créée par bloc ne change pas.</p><p class="en">From block 25,000 on, every block pays 2% of its reward, 1 RDT out of 50, to the creator’s address. The other 98% goes to the miner. No RDT is added: the share comes out of the reward, and the amount created per block does not change.</p>
+        <p class="fr">C’est une règle du réseau, annoncée à l’avance et lisible dans le code (<code>GetDevFeeAmount</code> et <code>GetDevFeeScript</code> dans <code>radthal.patch</code>). Un bloc dont la première transaction ne verse pas cette part est refusé par les nœuds à jour, avec l’erreur <code>bad-cb-devfee</code>.</p><p class="en">It is a network rule, announced in advance and readable in the code (<code>GetDevFeeAmount</code> and <code>GetDevFeeScript</code> in <code>radthal.patch</code>). A block whose first transaction does not pay this share is rejected by up-to-date nodes, with the error <code>bad-cb-devfee</code>.</p>
+        <p class="fr"><strong>Mettez votre nœud à jour avant le bloc 25&nbsp;000.</strong> Un nœud qui n’est pas à jour accepte des blocs que les autres refusent, et se retrouve sur une autre chaîne.</p><p class="en"><strong>Update your node before block 25,000.</strong> A node that is not up to date accepts blocks the others reject, and ends up on a different chain.</p>
+        <p class="fr">En désaccord avec cette règle ? Radthal est un logiciel libre : vous pouvez garder l’ancienne version, mais vous suivrez alors votre propre chaîne.</p><p class="en">Disagree with this rule? Radthal is free software: you can keep the old version, but you will then follow your own chain.</p>
+      </div>
+      <div class="box">
+        <div class="lab"><span class="fr">Adresse du créateur</span><span class="en">Creator’s address</span></div>
+        <div class="val" id="dev">rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6</div>
+        <div class="row"><button class="copy" type="button" data-copy="rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6" data-target="dev"><span class="fr">Copier</span><span class="en">Copy</span></button></div>
+        <div class="lab"><span class="fr">Début</span><span class="en">Starts</span></div>
+        <div class="val"><span class="fr">Bloc 25&nbsp;000 (les blocs d’avant ne changent pas)</span><span class="en">Block 25,000 (earlier blocks are unchanged)</span></div>
+        <div class="lab"><span class="fr">Montant</span><span class="en">Amount</span></div>
+        <div class="val"><span class="fr">Au moins 2&nbsp;% de la récompense du bloc, hors frais de transaction</span><span class="en">At least 2% of the block reward, excluding transaction fees</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="limites">
+    <div class="sec-head"><div class="pearls"></div>
+      <h2><span class="fr">À savoir avant de s’y intéresser</span><span class="en">Good to know before you look</span></h2></div>
+    <ul class="limits">
+      <li><i class="ring"></i><div><span class="fr"><strong>Aucune valeur, aucun marché, aucune promesse de gain.</strong> Radthal n’est pas un investissement et ne doit jamais être présenté comme tel.</span><span class="en"><strong>No value, no market, no promise of gain.</strong> Radthal is not an investment and must never be presented as one.</span></div></li>
+      <li><i class="ring"></i><div><span class="fr">Le réseau est minuscule, donc fragile : un mineur plus puissant peut réécrire les derniers blocs. L’avantage du petit mineur est temporaire.</span><span class="en">The network is tiny, hence fragile: a more powerful miner can rewrite the latest blocks. The small miner’s edge is temporary.</span></div></li>
+      <li><i class="ring"></i><div><span class="fr">À ce jour, un seul nœud est connu : celui du créateur.</span><span class="en">To date, only one node is known: the creator’s.</span></div></li>
+      <li><i class="ring"></i><div><span class="fr">Le paiement par radio est en développement : il n’est pas encore disponible, et rien ne garantit qu’il aboutira.</span><span class="en">Paying by radio is in development: it is not available yet, and nothing guarantees it will succeed.</span></div></li>
+      <li><i class="ring"></i><div><span class="fr">Le point de contrôle repose sur la confiance dans le créateur : ce n’est pas aussi décentralisé que Bitcoin.</span><span class="en">The checkpoint relies on trusting the creator: this is not as decentralized as Bitcoin.</span></div></li>
+      <li><i class="ring"></i><div><span class="fr">Vous êtes seul responsable de vos clés et de vos sauvegardes. Un message écrit dans la chaîne est public et définitif.</span><span class="en">You alone are responsible for your keys and backups. A message written in the chain is public and permanent.</span></div></li>
+      <li><i class="ring"></i><div><span class="fr">Radthal n’a aucun lien avec Bitcoin ni avec ses développeurs.</span><span class="en">Radthal has no connection with Bitcoin or its developers.</span></div></li>
+    </ul>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <div class="links">
+    <a href="https://github.com/bryancarterdouglas/radthal" target="_blank" rel="noopener"><span class="fr">Code source</span><span class="en">Source code</span></a>
+    <a href="https://github.com/bryancarterdouglas/Umbrel-radthal" target="_blank" rel="noopener"><span class="fr">Pages Umbrel</span><span class="en">Umbrel pages</span></a>
+    <a href="https://youtu.be/20HJ0tP18fI" target="_blank" rel="noopener"><span class="fr">Vidéo de présentation (en français)</span><span class="en">Overview video (in French)</span></a>
+    <a href="https://youtu.be/NB6UsRZOKIE" target="_blank" rel="noopener"><span class="fr">Tutoriel pour débutant (en français)</span><span class="en">Beginner tutorial (in French)</span></a>
+    <a href="https://github.com/bryancarterdouglas/argon-one-v5-oled-ecran-umbrel" target="_blank" rel="noopener"><span class="fr">Projet annexe : écran du boîtier Argon ONE V5</span><span class="en">Side project: Argon ONE V5 case screen</span></a>
+  </div>
+  <p class="fr">Logiciel expérimental, sans garantie. Le code vient de <a href="https://github.com/bitcoin/bitcoin" target="_blank" rel="noopener">Bitcoin Core</a> (licence MIT) ; Radthal est publié sous licence MIT.</p><p class="en">Experimental software, no warranty. The code comes from <a href="https://github.com/bitcoin/bitcoin" target="_blank" rel="noopener">Bitcoin Core</a> (MIT license); Radthal is released under the MIT license.</p>
+</div></footer>
+
+<div class="vol" id="vol" role="group" aria-label="Volume" hidden>
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor" stroke="none"/><path d="M15.5 9a4 4 0 0 1 0 6"/></svg>
+  <input type="range" id="volr" min="0" max="100" step="1" value="70" aria-label="Volume">
+  <output id="volv" for="volr" aria-hidden="true">70</output>
+</div>
+<dialog id="lb" aria-labelledby="lb-cap">
+  <div class="lb-body">
+    <button class="lb-b lb-x" type="button"><span aria-hidden="true">×</span><span class="sr-only"><span class="fr">Fermer</span><span class="en">Close</span></span></button>
+    <button class="lb-b lb-p" type="button"><span aria-hidden="true">‹</span><span class="sr-only"><span class="fr">Image précédente</span><span class="en">Previous image</span></span></button>
+    <button class="lb-b lb-n" type="button"><span aria-hidden="true">›</span><span class="sr-only"><span class="fr">Image suivante</span><span class="en">Next image</span></span></button>
+    <div class="lb-scroll"><button class="lb-img" type="button"><img alt="" width="1000" height="1000"><span class="sr-only"><span class="fr">Basculer entre image entière et taille réelle</span><span class="en">Switch between whole image and full size</span></span></button></div>
+    <p class="lb-cap" id="lb-cap"></p>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  var root=document.documentElement, KEY='radthal-lang', L='fr';
+  try{
+    var s=localStorage.getItem(KEY);
+    if(s==='fr'||s==='en'){L=s}
+    else if((navigator.language||'fr').toLowerCase().indexOf('fr')!==0){L='en'}
+  }catch(e){
+    if((navigator.language||'fr').toLowerCase().indexOf('fr')!==0){L='en'}
+  }
+  function set(l,save){
+    L=l; root.setAttribute('lang',l); root.setAttribute('data-lang',l);
+    var b=document.querySelectorAll('.langs button');
+    for(var i=0;i<b.length;i++){b[i].setAttribute('aria-pressed',b[i].getAttribute('data-l')===l?'true':'false')}
+    if(save){try{localStorage.setItem(KEY,l)}catch(e){}}
+  }
+  set(L,false);
+  var lb=document.querySelectorAll('.langs button');
+  for(var i=0;i<lb.length;i++){lb[i].addEventListener('click',function(){set(this.getAttribute('data-l'),true)})}
+
+  function sel(el){var r=document.createRange();r.selectNodeContents(el);var g=window.getSelection();g.removeAllRanges();g.addRange(r)}
+  var cb=document.querySelectorAll('button.copy');
+  for(var j=0;j<cb.length;j++){
+    cb[j].addEventListener('click',function(){
+      var btn=this, txt=btn.getAttribute('data-copy'), tgt=document.getElementById(btn.getAttribute('data-target'));
+      function ok(){
+        btn.classList.add('done');
+        var f=btn.querySelector('.fr'), e=btn.querySelector('.en');
+        var f0=f.textContent, e0=e.textContent; f.textContent='Copié'; e.textContent='Copied';
+        setTimeout(function(){f.textContent=f0; e.textContent=e0; btn.classList.remove('done')},1600);
+      }
+      function fallback(){if(tgt){sel(tgt)}}
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,fallback)}
+      else{fallback()}
+    });
+  }
+})();
+
+/* ===== Animation : lecture, apparitions, pointeur, et le fond (chaine de blocs + braises) ===== */
+(function(){
+  var root=document.documentElement;
+  var reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* barre de lecture et petit decalage de la piece */
+  var tick=false;
+  function upd(){
+    tick=false;
+    var h=Math.max(root.scrollHeight,document.body.scrollHeight)-window.innerHeight, y=window.scrollY||window.pageYOffset||0;
+    root.style.setProperty('--p',(h>0?Math.min(1,Math.max(0,y/h)):0).toFixed(4));
+    if(!reduce){root.style.setProperty('--sy',String(Math.round(Math.min(y,900))))}
+  }
+  window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true});
+  window.addEventListener('resize',upd);
+  upd();
+
+  /* les reperes s'allument en arrivant dans l'ecran */
+  var marks=document.querySelectorAll('.sec-head,.rail li,.pillar,.radiofig');
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('seen');io.unobserve(e.target)}});
+    },{threshold:.35});
+    for(var i=0;i<marks.length;i++){io.observe(marks[i])}
+  }else{
+    for(var j=0;j<marks.length;j++){marks[j].classList.add('seen')}
+  }
+
+  /* lueur qui suit le pointeur sur les cartes */
+  var cards=document.querySelectorAll('.card,.box');
+  for(var k=0;k<cards.length;k++){
+    (function(c){
+      c.addEventListener('pointermove',function(ev){
+        var r=c.getBoundingClientRect();
+        c.style.setProperty('--mx',(ev.clientX-r.left)+'px');
+        c.style.setProperty('--my',(ev.clientY-r.top)+'px');
+      });
+    })(cards[k]);
+  }
+
+  /* la piece suit un peu le pointeur (ordinateur seulement) */
+  var coin=document.querySelector('.coin');
+  if(coin&&!reduce&&window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches){
+    var pend=false,px=0,py=0;
+    window.addEventListener('pointermove',function(ev){
+      px=ev.clientX;py=ev.clientY;
+      if(pend)return;
+      pend=true;
+      requestAnimationFrame(function(){
+        pend=false;
+        coin.style.setProperty('--tx',(((px/window.innerWidth)-.5)*16).toFixed(2));
+        coin.style.setProperty('--ty',(-((py/window.innerHeight)-.5)*12).toFixed(2));
+      });
+    },{passive:true});
+  }
+
+  /* le fond : une chaine de blocs qui defile, un bloc "trouve" de temps en temps, des braises qui montent */
+  var cv=document.getElementById('fx');
+  if(!cv||!cv.getContext)return;
+  var ctx=cv.getContext('2d'), stage=cv.parentNode;
+  var W=1,H=1,dpr=1,C={},run=false,raf=0,last=0,clock=0,nextFound=1.4,rows=[],embers=[],pulses=[];
+  var small=window.innerWidth<700;
+
+  function lum(h){
+    h=(h||'#000').replace('#','');
+    if(h.length===3){h=h.replace(/(.)/g,'$1$1')}
+    return (0.299*parseInt(h.substr(0,2),16)+0.587*parseInt(h.substr(2,2),16)+0.114*parseInt(h.substr(4,2),16))/255;
+  }
+  function colors(){
+    var cs=getComputedStyle(root);
+    C.blue=cs.getPropertyValue('--blue').trim()||'#5a9bf5';
+    C.red=cs.getPropertyValue('--red').trim()||'#ff6b5f';
+    C.pearl=cs.getPropertyValue('--pearl').trim()||'#8d97ab';
+    C.mono=cs.getPropertyValue('--mono').trim()||'ui-monospace,Menlo,Consolas,monospace';
+    C.dark=lum(cs.getPropertyValue('--bg').trim())<.5;
+  }
+  function rr(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+    ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+    ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+    ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+  }
+  var BW=96,BH=58,GAP=54,PER=BW+GAP;
+  /* le contenu des blocs : deux petites chaines reellement minees dans le navigateur (3 zeros),
+     chaque bloc porte l'empreinte du precedent. Ce n'est pas la vraie chaine Radthal. */
+  var chains=[{seed:'radthal-a',b:[],need:0,nonce:0},{seed:'radthal-b',b:[],need:0,nonce:0}];
+  function stepChain(ch,until){
+    var sha=window.__radthalSha256;if(!sha)return false;
+    while(true){
+      var k=ch.b.length, prev=k?ch.b[k-1].h:'0000000000000000';
+      for(var j=0;j<48;j++){
+        var h=sha(ch.seed+'|'+k+'|'+prev+'|'+ch.nonce);
+        if(h.indexOf('000')===0){ch.b.push({h:h,p:prev});ch.nonce=0;return true}
+        ch.nonce++;
+      }
+      if(performance.now()>until)return false;
+    }
+  }
+  function pending(){for(var i=0;i<chains.length;i++){if(chains[i].b.length<chains[i].need)return true}return false}
+  function pump(ms){
+    var until=performance.now()+ms;
+    for(var i=0;i<chains.length;i++){
+      var ch=chains[i];
+      while(ch.b.length<ch.need){
+        if(!stepChain(ch,until))return;
+        if(performance.now()>until)return;
+      }
+    }
+  }
+  function settle(){pump(10);draw(0);if(pending()){setTimeout(settle,30)}}
+  function hx(str,x,y,a){
+    var z=0;while(z<str.length&&z<3&&str.charAt(z)==='0'){z++}
+    var head=str.substr(0,z), tail=str.substr(z,11-z)+String.fromCharCode(8230);
+    ctx.fillStyle=C.blue;ctx.globalAlpha=C.dark?a+.25:a+.2;ctx.fillText(head,x,y);
+    var w=ctx.measureText(head).width;
+    ctx.fillStyle=C.pearl;ctx.globalAlpha=a;ctx.fillText(tail,x+w,y);
+  }
+  function build(){
+    var n=Math.ceil(W/PER)+3;
+    rows=[{top:1,v:-15,x:0,f:[],ch:chains[0],base:0,dir:1,wr:0,po:null},
+          {top:0,v:10,x:-40,f:[],ch:chains[1],base:n+2,dir:-1,wr:0,po:null}];
+    rows.forEach(function(r){for(var i=0;i<n;i++){r.f.push(0)}});
+    embers=[];
+    if(!reduce){
+      var count=small?22:Math.min(64,Math.round(W/22));
+      for(var i=0;i<count;i++){embers.push(spawn(true))}
+    }
+  }
+  function spawn(first){
+    return {x:Math.random()*W,y:first?Math.random()*H:H+10+Math.random()*30,vy:-(16+Math.random()*44),
+            amp:6+Math.random()*16,ph:Math.random()*6.28,fr:.4+Math.random()*1.1,r:.7+Math.random()*2,
+            g:Math.random(),a:.35+Math.random()*.6};
+  }
+  function draw(dt){
+    ctx.clearRect(0,0,W,H);
+    var sy=(window.scrollY||0)*.15;
+    /* chaine de blocs */
+    rows.forEach(function(r,ri){
+      if(!reduce){r.x+=r.v*dt}
+      var n=r.f.length, off=((r.x%PER)+PER)%PER-PER;
+      if(r.po!==null){if(r.dir>0?(off>r.po+PER/2):(off<r.po-PER/2)){r.wr++}}
+      r.po=off;
+      var need=(r.dir>0?r.base+n+r.wr:r.base+r.wr+1);
+      if(need>r.ch.need){r.ch.need=need}
+      var en=root.getAttribute('data-lang')==='en';
+      var y=(r.top?34:H-36)-BH/2+(ri?-1:1)*sy*.2;
+      for(var i=0;i<n;i++){
+        var x=off+i*PER, fl=r.f[i];
+        if(fl>0){r.f[i]=Math.max(0,fl-dt/1.9)}
+        /* lien entre blocs */
+        ctx.globalAlpha=C.dark?.22:.3;ctx.strokeStyle=C.blue;ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(x+BW,y+BH/2);ctx.lineTo(x+PER,y+BH/2);ctx.stroke();
+        /* bloc */
+        ctx.globalAlpha=C.dark?.2:.28;ctx.strokeStyle=C.blue;ctx.lineWidth=1.4;rr(x,y,BW,BH,9);ctx.stroke();
+        var bk=r.ch.b[r.dir>0?r.base+i+r.wr:r.base-i+r.wr];
+        if(bk){
+          ctx.textBaseline='alphabetic';
+          ctx.font='500 6.5px '+C.mono;ctx.fillStyle=C.pearl;ctx.globalAlpha=C.dark?.5:.65;
+          ctx.fillText(en?'HASH':'EMPREINTE',x+11,y+14);
+          ctx.fillText(en?'PREVIOUS':'PR'+String.fromCharCode(201)+'C'+String.fromCharCode(201)+'DENT',x+11,y+37);
+          ctx.font='500 9px '+C.mono;
+          hx(bk.h,x+11,y+25,C.dark?.62:.75);
+          hx(bk.p,x+11,y+48,C.dark?.45:.6);
+        }else{
+          ctx.fillStyle=C.pearl;ctx.globalAlpha=C.dark?.35:.4;
+          for(var d=0;d<3;d++){ctx.beginPath();ctx.arc(x+16+d*11,y+BH-14,2,0,6.283);ctx.fill()}
+        }
+        if(fl>0){
+          ctx.globalAlpha=Math.min(1,fl*1.2);ctx.strokeStyle=C.red;ctx.lineWidth=2.2;
+          ctx.shadowColor=C.red;ctx.shadowBlur=C.dark?18:6;rr(x,y,BW,BH,9);ctx.stroke();ctx.shadowBlur=0;
+        }
+      }
+      r.xo=off;
+    });
+    /* un bloc est trouve */
+    if(!reduce){
+      nextFound-=dt;
+      if(nextFound<=0){
+        nextFound=2.6+Math.random()*3;
+        var r=rows[Math.random()<.5?0:1], vis=[];
+        for(var i=0;i<r.f.length;i++){var bx=r.xo+i*PER;if(bx>0&&bx+BW<W){vis.push(i)}}
+        if(vis.length){
+          var pick=vis[Math.floor(Math.random()*vis.length)];
+          r.f[pick]=1;
+          pulses.push({x:r.xo+pick*PER+BW/2,y:(r.top?34:H-36)+((r===rows[0])?1:-1)*sy*.2,t:0});
+        }
+      }
+      pulses=pulses.filter(function(p){p.t+=dt;return p.t<1.6});
+      pulses.forEach(function(p){
+        var k=p.t/1.6;ctx.globalAlpha=(1-k)*.6;ctx.strokeStyle=C.red;ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(p.x,p.y,10+k*70,0,6.283);ctx.stroke();
+      });
+    }
+    /* braises */
+    if(C.dark){ctx.globalCompositeOperation='lighter'}
+    embers.forEach(function(e,i){
+      if(!reduce){
+        e.y+=e.vy*dt;e.ph+=e.fr*dt;
+        if(e.y<-12){embers[i]=spawn(false);return}
+      }
+      var x=e.x+Math.sin(e.ph)*e.amp, life=Math.max(0,Math.min(1,e.y/H));
+      var a=e.a*(.25+.75*life)*(C.dark?1:.7);
+      var g=Math.round(70+e.g*90);
+      ctx.fillStyle='rgba(255,'+g+','+(C.dark?50:40)+','+a.toFixed(3)+')';
+      ctx.globalAlpha=1;
+      ctx.beginPath();ctx.arc(x,e.y,e.r,0,6.283);ctx.fill();
+      if(C.dark){ctx.fillStyle='rgba(255,'+g+',50,'+(a*.18).toFixed(3)+')';ctx.beginPath();ctx.arc(x,e.y,e.r*4.5,0,6.283);ctx.fill()}
+    });
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+  }
+  function size(){
+    var r=cv.getBoundingClientRect();
+    dpr=Math.min(window.devicePixelRatio||1,small?1.5:2);
+    W=Math.max(1,Math.round(r.width));H=Math.max(1,Math.round(r.height));
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    build();draw(0);
+  }
+  function frame(ts){
+    raf=0;if(!run)return;
+    var dt=Math.min(.05,((ts-last)/1000)||0);last=ts;clock+=dt;
+    if(pending()){pump(clock<4?11:5)}
+    draw(dt);raf=requestAnimationFrame(frame);
+  }
+  function start(){if(run||reduce)return;run=true;last=performance.now();raf=requestAnimationFrame(frame)}
+  function stop(){run=false;if(raf){cancelAnimationFrame(raf);raf=0}}
+
+  colors();size();
+  if(reduce){setTimeout(settle,0)}
+  if('ResizeObserver' in window){new ResizeObserver(function(){size()}).observe(stage)}
+  else{window.addEventListener('resize',size)}
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){es[0].isIntersecting?start():stop()},{threshold:0}).observe(stage);
+  }else{start()}
+  function retheme(){colors();draw(0)}
+  if(window.matchMedia){
+    var mq=matchMedia('(prefers-color-scheme: dark)');
+    if(mq.addEventListener){mq.addEventListener('change',retheme)}
+  }
+  if('MutationObserver' in window){new MutationObserver(retheme).observe(root,{attributes:true,attributeFilter:['data-theme','data-lang']})}
+})();
+
+/* ===== Agrandir les captures : fenetre plein ecran, fleches, echap, balayage ===== */
+(function(){
+  var root=document.documentElement;
+  var zs=document.querySelectorAll('button.zoom'), dlg=document.getElementById('lb');
+  function lang(){return root.getAttribute('data-lang')==='en'?'en':'fr'}
+  function alts(){
+    var l=lang(), all=document.querySelectorAll('img[data-alt-fr]');
+    for(var i=0;i<all.length;i++){all[i].setAttribute('alt',all[i].getAttribute('data-alt-'+l))}
+  }
+  alts();
+  if('MutationObserver' in window){new MutationObserver(function(){alts();if(dlg&&isOpen()){img.setAttribute('alt',zs[cur].querySelector('img').getAttribute('data-alt-'+lang()))}}).observe(root,{attributes:true,attributeFilter:['data-lang']})}
+  if(!dlg||!zs.length)return;
+  var img=dlg.querySelector('.lb-img img'), cap=dlg.querySelector('.lb-cap'), tog=dlg.querySelector('.lb-img'),
+      scroller=dlg.querySelector('.lb-scroll'), body=dlg.querySelector('.lb-body'), cur=0, opener=null, x0=null, y0=null;
+  function isOpen(){return dlg.hasAttribute('open')}
+  function show(i){
+    cur=(i+zs.length)%zs.length;
+    var s=zs[cur].querySelector('img');
+    img.setAttribute('width',s.getAttribute('width'));img.setAttribute('height',s.getAttribute('height'));
+    img.setAttribute('alt',s.getAttribute('data-alt-'+lang()));
+    img.src=s.currentSrc||s.src;
+    cap.innerHTML=zs[cur].parentNode.querySelector('figcaption').innerHTML;
+    dlg.classList.remove('full');scroller.scrollTop=0;
+  }
+  function openAt(i,from){
+    opener=from;show(i);
+    if(typeof dlg.showModal==='function'){dlg.showModal()}else{dlg.setAttribute('open','')}
+    root.style.overflow='hidden';
+    dlg.querySelector('.lb-x').focus();
+  }
+  function closeIt(){
+    if(typeof dlg.close==='function'){dlg.close()}else{dlg.removeAttribute('open');done()}
+  }
+  function done(){root.style.overflow='';if(opener&&opener.focus){opener.focus()}}
+  dlg.addEventListener('close',done);
+  for(var k=0;k<zs.length;k++){
+    (function(b,i){b.addEventListener('click',function(){openAt(i,b)})})(zs[k],k);
+  }
+  dlg.querySelector('.lb-x').addEventListener('click',closeIt);
+  dlg.querySelector('.lb-p').addEventListener('click',function(){show(cur-1)});
+  dlg.querySelector('.lb-n').addEventListener('click',function(){show(cur+1)});
+  tog.addEventListener('click',function(){dlg.classList.toggle('full');scroller.scrollTop=0});
+  dlg.addEventListener('click',function(e){if(e.target===dlg||e.target===body||e.target===scroller){closeIt()}});
+  document.addEventListener('keydown',function(e){
+    if(!isOpen())return;
+    if(e.key==='ArrowLeft'){show(cur-1);e.preventDefault()}
+    else if(e.key==='ArrowRight'){show(cur+1);e.preventDefault()}
+    else if(e.key==='Escape'&&typeof dlg.showModal!=='function'){closeIt()}
+  });
+  scroller.addEventListener('touchstart',function(e){var t=e.changedTouches[0];x0=t.clientX;y0=t.clientY},{passive:true});
+  scroller.addEventListener('touchend',function(e){
+    if(x0===null||dlg.classList.contains('full'))return;
+    var t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0; x0=null;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){show(cur+(dx<0?1:-1))}
+  },{passive:true});
+})();
+
+/* ===== Demo : miner un bloc dans le navigateur (simulation, pas la vraie chaine) ===== */
+(function(){
+  var K=new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+  var W=new Uint32Array(64), enc=(typeof TextEncoder!=='undefined')?new TextEncoder():null;
+  function utf8(s){
+    if(enc){return enc.encode(s)}
+    var u=unescape(encodeURIComponent(s)), a=new Uint8Array(u.length);
+    for(var i=0;i<u.length;i++){a[i]=u.charCodeAt(i)}
+    return a;
+  }
+  function sha256(str){
+    var b=utf8(str), l=b.length, n=((l+9+63)>>6)<<6, m=new Uint8Array(n);
+    m.set(b);m[l]=0x80;
+    var dv=new DataView(m.buffer);
+    dv.setUint32(n-4,(l*8)>>>0);dv.setUint32(n-8,Math.floor(l*8/4294967296));
+    var h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+    for(var o=0;o<n;o+=64){
+      var i;
+      for(i=0;i<16;i++){W[i]=dv.getUint32(o+i*4)}
+      for(i=16;i<64;i++){
+        var a=W[i-15],c=W[i-2];
+        var s0=((a>>>7)|(a<<25))^((a>>>18)|(a<<14))^(a>>>3), s1=((c>>>17)|(c<<15))^((c>>>19)|(c<<13))^(c>>>10);
+        W[i]=(W[i-16]+s0+W[i-7]+s1)|0;
+      }
+      var A=h0,B=h1,C=h2,D=h3,E=h4,F=h5,G=h6,H=h7;
+      for(i=0;i<64;i++){
+        var S1=((E>>>6)|(E<<26))^((E>>>11)|(E<<21))^((E>>>25)|(E<<7)), ch=(E&F)^(~E&G), t1=(H+S1+ch+K[i]+W[i])|0;
+        var S0=((A>>>2)|(A<<30))^((A>>>13)|(A<<19))^((A>>>22)|(A<<10)), mj=(A&B)^(A&C)^(B&C), t2=(S0+mj)|0;
+        H=G;G=F;F=E;E=(D+t1)|0;D=C;C=B;B=A;A=(t1+t2)|0;
+      }
+      h0=(h0+A)|0;h1=(h1+B)|0;h2=(h2+C)|0;h3=(h3+D)|0;h4=(h4+E)|0;h5=(h5+F)|0;h6=(h6+G)|0;h7=(h7+H)|0;
+    }
+    var r=[h0,h1,h2,h3,h4,h5,h6,h7], out='';
+    for(var j=0;j<8;j++){out+=('00000000'+(r[j]>>>0).toString(16)).slice(-8)}
+    return out;
+  }
+  if(typeof window==='undefined'){module.exports=sha256;return}
+  window.__radthalSha256=sha256;
+
+  var chainEl=document.getElementById('dchain'), tpl=document.getElementById('tpl-blk');
+  if(!chainEl||!tpl||!tpl.content)return;
+  var root=document.documentElement, ZEROS='000', ZERO64=new Array(65).join('0');
+  var DEFAULTS=['Alice → Bob : 5 RDT','Bob → Chloé : 2 RDT','Chloé → Dan : 1 RDT'];
+  var blocks=[], els=[], busy=false, timer=0, stopFlag=false, mining=-1, everMined=false, hashes=[];
+  var TXT={
+    fr:{none:'Aucun bloc n’est encore miné. Cliquez sur « Miner ».',
+        ok:'Chaîne valide : les blocs sont liés. Maintenant, changez un texte et regardez ce qui se passe.',
+        broken:function(n){return 'Chaîne cassée à partir du bloc '+n+' : il faut re-miner ce bloc et tous les suivants.'},
+        pending:function(n){return 'Il reste à miner le bloc '+n+'.'},
+        busy:function(n,t){return 'Minage du bloc '+n+'… '+t+' essais'}},
+    en:{none:'No block is mined yet. Click “Mine”.',
+        ok:'Valid chain: the blocks are linked. Now change a text and watch what happens.',
+        broken:function(n){return 'Chain broken from block '+n+': this block and all the following ones must be mined again.'},
+        pending:function(n){return 'Block '+n+' still has to be mined.'},
+        busy:function(n,t){return 'Mining block '+n+'… '+t+' tries'}}
+  };
+  function lang(){return root.getAttribute('data-lang')==='en'?'en':'fr'}
+  function reset(){
+    stop();
+    blocks=[];
+    for(var i=0;i<3;i++){blocks.push({data:DEFAULTS[i],nonce:0,mined:false})}
+    everMined=false;
+    for(var j=0;j<els.length;j++){els[j].querySelector('[data-data]').value=blocks[j].data}
+    render();
+  }
+  function headerOf(i,prev){return (i+1)+'|'+prev+'|'+blocks[i].data+'|'+blocks[i].nonce}
+  function compute(){
+    var prev=ZERO64;hashes=[];
+    for(var i=0;i<blocks.length;i++){
+      var h=sha256(headerOf(i,prev));
+      hashes.push({prev:prev,hash:h,ok:h.indexOf(ZEROS)===0});
+      prev=h;
+    }
+  }
+  function show(hex){
+    var z=0;while(z<hex.length&&hex.charAt(z)==='0'){z++}
+    z=Math.min(z,8);
+    return (z?'<span class="z">'+hex.slice(0,z)+'</span>':'')+hex.slice(z,18)+'…';
+  }
+  function render(){
+    compute();
+    var firstBad=-1;
+    for(var i=0;i<blocks.length;i++){
+      var e=els[i], r=hashes[i];
+      e.setAttribute('data-state',r.ok?'ok':'bad');
+      e.querySelector('[data-prev]').innerHTML=(r.prev===ZERO64?'<span class="z">0000</span>0000000000…':show(r.prev));
+      e.querySelector('[data-nonce]').textContent=blocks[i].nonce.toLocaleString(lang());
+      e.querySelector('[data-hash]').innerHTML=show(r.hash);
+      e.querySelector('[data-hash]').title=r.hash;
+      e.querySelector('[data-prev]').title=r.prev;
+      if(!r.ok&&firstBad<0){firstBad=i}
+    }
+    var st=document.getElementById('dstatus'), T=TXT[lang()], msg;
+    if(busy){msg=T.busy(mining+1,blocks[mining].nonce.toLocaleString(lang()))}
+    else if(firstBad<0){msg=T.ok}
+    else if(!everMined){msg=T.none}
+    else if(blocks[firstBad].mined){msg=T.broken(firstBad+1)}
+    else{msg=T.pending(firstBad+1)}
+    st.textContent=msg;
+    st.setAttribute('data-k',firstBad<0?'ok':(busy?'busy':'bad'));
+    for(var k=0;k<els.length;k++){
+      els[k].querySelector('[data-data]').disabled=busy;
+      var mb=els[k].querySelector('[data-mine]');
+      mb.classList.toggle('busy',busy&&mining===k);
+      mb.disabled=busy&&mining!==k;
+    }
+    document.getElementById('d-all').disabled=busy;
+    document.getElementById('d-reset').disabled=busy;
+  }
+  function stop(){stopFlag=true;if(timer){clearTimeout(timer);timer=0}busy=false;mining=-1}
+  function mineOne(i,next){
+    busy=true;stopFlag=false;mining=i;
+    var prev=hashes[i].prev, b=blocks[i], n=0;
+    function step(){
+      timer=0;
+      if(stopFlag){busy=false;mining=-1;render();return}
+      var t0=performance.now();
+      while(performance.now()-t0<14){
+        for(var k=0;k<150;k++){
+          if(sha256((i+1)+'|'+prev+'|'+b.data+'|'+n).indexOf(ZEROS)===0){
+            b.nonce=n;b.mined=true;everMined=true;busy=false;mining=-1;render();
+            if(next){next()}
+            return;
+          }
+          n++;
+        }
+      }
+      b.nonce=n;render();
+      timer=setTimeout(step,0);
+    }
+    step();
+  }
+  function mineAll(){
+    var i=0;
+    (function go(){
+      compute();
+      while(i<blocks.length&&hashes[i].ok){i++}
+      if(i>=blocks.length){render();return}
+      mineOne(i,function(){i++;go()});
+    })();
+  }
+  for(var i=0;i<3;i++){
+    var node=tpl.content.firstElementChild.cloneNode(true);
+    node.querySelector('[data-h]').textContent=String(i+1);
+    chainEl.appendChild(node);els.push(node);
+  }
+  chainEl.addEventListener('input',function(e){
+    var el=e.target.closest?e.target.closest('[data-data]'):null;
+    if(!el||busy)return;
+    var idx=els.indexOf(el.closest('.blk'));
+    if(idx<0)return;
+    blocks[idx].data=el.value;render();
+  });
+  chainEl.addEventListener('click',function(e){
+    var btn=e.target.closest?e.target.closest('[data-mine]'):null;
+    if(!btn)return;
+    var idx=els.indexOf(btn.closest('.blk'));
+    if(busy&&mining===idx){stop();render();return}
+    if(!busy){compute();mineOne(idx,null)}
+  });
+  document.getElementById('d-all').addEventListener('click',function(){if(!busy){mineAll()}});
+  document.getElementById('d-reset').addEventListener('click',reset);
+  if('MutationObserver' in window){new MutationObserver(function(){render()}).observe(root,{attributes:true,attributeFilter:['data-lang']})}
+  reset();
+})();
+
+/* ===== Ambiance sonore : une musique originale, calculee dans le navigateur (aucun fichier audio) =====
+   Re mineur, 90 battements/minute : Dm - Bb - F - C. Nappes douces, basse, arpege de boite a musique et
+   une petite melodie, tout est tire des notes de l'accord en cours, donc tout sonne ensemble.
+   Coupee par defaut : les navigateurs interdisent le son sans clic, et personne n'aime les sites bruyants. */
+(function(){
+  var btn=document.getElementById('snd');
+  var AC=window.AudioContext||window.webkitAudioContext;
+  if(!btn){return}
+  if(!AC){btn.hidden=true;return}
+  var root=document.documentElement;
+  var BEAT=60/90, E=BEAT/2, D=BEAT*8; /* un accord = 8 temps = 16 croches */
+  /* bass : fondamentale ; v : nappe ; n : notes de l'accord (arpege) ; l : melodie (octave au-dessus) */
+  var CH=[
+    {bass:73.42, v:[146.83,174.61,220.00], n:[293.66,349.23,440.00,523.25]},
+    {bass:58.27, v:[116.54,146.83,174.61], n:[293.66,349.23,466.16,587.33]},
+    {bass:87.31, v:[130.81,174.61,220.00], n:[261.63,349.23,440.00,523.25]},
+    {bass:65.41, v:[130.81,164.81,196.00], n:[261.63,329.63,392.00,523.25]}
+  ];
+  /* deux motifs d'arpege (indices dans n, 4 = octave de n[0]) : 16 croches par accord */
+  var PAT=[
+    [0,2,1,3, 2,4,3,2,  0,2,1,3, 4,3,2,1],
+    [0,1,2,3, 2,1,2,4,  0,1,2,3, 2,3,1,2]
+  ];
+  var LEAD=[1,2,3,2]; /* melodie : une note tous les 2 temps */
+
+  function impulse(c,sec,decay){
+    var n=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,n,c.sampleRate);
+    for(var ch=0;ch<2;ch++){
+      var d=b.getChannelData(ch);
+      for(var i=0;i<n;i++){d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay)}
+    }
+    return b;
+  }
+
+  function build(c){
+    var g={};
+    g.master=c.createGain();g.master.gain.value=0;
+    var comp=c.createDynamicsCompressor();
+    comp.threshold.value=-20;comp.knee.value=24;comp.ratio.value=3;comp.attack.value=.02;comp.release.value=.4;
+    g.master.connect(comp);comp.connect(c.destination);
+    g.verb=c.createConvolver();g.verb.buffer=impulse(c,2.8,2.8);
+    var vo=c.createGain();vo.gain.value=.9;g.verb.connect(vo);vo.connect(g.master);
+    g.vsend=c.createGain();g.vsend.gain.value=.4;g.vsend.connect(g.verb);
+    g.pad=c.createGain();
+    var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1100;lp.Q.value=.3;
+    g.pad.connect(lp);lp.connect(g.master);lp.connect(g.vsend);
+    var lfo=c.createOscillator(),lg=c.createGain();
+    lfo.frequency.value=.06;lg.gain.value=320;lfo.connect(lg);lg.connect(lp.frequency);lfo.start(0);
+    g.note=c.createGain();
+    g.note.connect(g.master);g.note.connect(g.vsend);
+    var dl=c.createDelay(1.5),fb=c.createGain(),dg=c.createGain();
+    dl.delayTime.value=E*1.5;fb.gain.value=.3;dg.gain.value=.3;
+    g.note.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(dg);dg.connect(g.vsend);dg.connect(g.master);
+    return g;
+  }
+
+  function pad(s,f,t,amp,det){
+    var c=s.c,o=c.createOscillator(),o2=c.createOscillator(),gn=c.createGain(),g2=c.createGain();
+    o.type='triangle';o.frequency.value=f;o.detune.value=det;
+    o2.type='sine';o2.frequency.value=f*2;o2.detune.value=-det;g2.gain.value=.3;
+    o.connect(gn);o2.connect(g2);g2.connect(gn);gn.connect(s.g.pad);
+    var a=1.4,r=2.6;
+    gn.gain.setValueAtTime(0,t);
+    gn.gain.linearRampToValueAtTime(amp,t+a);
+    gn.gain.setValueAtTime(amp,t+D);
+    gn.gain.linearRampToValueAtTime(.0001,t+D+r);
+    o.start(t);o2.start(t);o.stop(t+D+r+.1);o2.stop(t+D+r+.1);
+  }
+
+  /* note courte : arpege (boite a musique), melodie (plus douce, plus longue) ou basse */
+  function ping(s,f,t,amp,dec,type,pan){
+    var c=s.c,o=c.createOscillator(),o3=c.createOscillator(),gn=c.createGain(),g3=c.createGain();
+    o.type=type;o.frequency.value=f;o3.type='sine';o3.frequency.value=f*2.01;g3.gain.value=type==='sine'?.16:.05;
+    o.connect(gn);o3.connect(g3);g3.connect(gn);
+    var out=gn;
+    if(pan&&c.createStereoPanner){var p=c.createStereoPanner();p.pan.value=pan;gn.connect(p);out=p}
+    out.connect(s.g.note);
+    gn.gain.setValueAtTime(0,t);
+    gn.gain.linearRampToValueAtTime(amp,t+.01);
+    gn.gain.exponentialRampToValueAtTime(.0008,t+dec);
+    o.start(t);o3.start(t);o.stop(t+dec+.05);o3.stop(t+dec+.05);
+  }
+
+  function chord(s,t){
+    var C=CH[s.idx%CH.length], pat=PAT[Math.floor(s.idx/CH.length)%PAT.length], i, T=C.n.concat([C.n[0]*2]);
+    /* nappe : fondamentale + trois voix */
+    pad(s,C.bass,t,.10,0);
+    for(i=0;i<C.v.length;i++){pad(s,C.v[i],t,.04,(i-1)*6)}
+    /* basse : un battement sur deux, une octave au-dessus de la fondamentale (audible sur un telephone) */
+    for(i=0;i<8;i+=2){ping(s,C.bass*2,t+i*BEAT,i%4===0?.10:.06,1.1,'triangle',0)}
+    /* arpege : une croche apres l'autre, premier temps accentue */
+    for(i=0;i<16;i++){
+      var acc=(i%8===0)?1.25:(i%2===0?1:.62), jit=(Math.random()-.5)*.012;
+      ping(s,T[pat[i]],t+i*E+jit,.05*acc*(.92+Math.random()*.16),1.5,'sine',(Math.random()*2-1)*.4);
+    }
+    /* melodie : une note tous les deux temps, tiree de l'accord, une octave plus haut */
+    for(i=0;i<4;i++){ping(s,C.n[LEAD[i]]*2,t+i*BEAT*2,.032,2.2,'sine',.15)}
+  }
+
+  function schedule(s,until){
+    while(s.cur<until){chord(s,s.cur);s.cur+=D;s.idx++}
+  }
+
+  function start(c){
+    var s={c:c,g:build(c),idx:0};
+    s.t0=s.cur=c.currentTime+.1;
+    return s;
+  }
+
+  /* pour tester : rend N secondes hors ligne avec exactement le meme code */
+  window.__radthalMusicRender=function(sec){
+    var OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+    var c=new OC(2,Math.floor(44100*sec),44100), s=start(c);
+    s.g.master.gain.value=.85;
+    schedule(s,sec);
+    return c.startRendering();
+  };
+
+  /* volume : curseur 0-100, courbe carree (l'oreille est logarithmique), 70 = niveau de depart */
+  var volEl=document.getElementById('vol'), volR=document.getElementById('volr'), volV=document.getElementById('volv');
+  var vol=70, KEYV='radthal-vol', idle=0;
+  try{var sv=parseInt(localStorage.getItem(KEYV),10);if(sv>=0&&sv<=100){vol=sv}}catch(e){}
+  function tg(){return 1.7*Math.pow(vol/100,2)}
+  function showVol(){
+    if(!volEl)return;
+    volEl.classList.remove('idle');
+    clearTimeout(idle);
+    idle=setTimeout(function(){volEl.classList.add('idle')},3500);
+  }
+  if(volR){
+    volR.value=vol;if(volV){volV.textContent=vol}
+    volR.addEventListener('input',function(){
+      vol=parseInt(volR.value,10)||0;if(volV){volV.textContent=vol}
+      try{localStorage.setItem(KEYV,String(vol))}catch(e){}
+      if(S&&active()){S.g.master.gain.setTargetAtTime(tg(),ctx.currentTime,.04)}
+      showVol();
+    });
+    volEl.addEventListener('pointerdown',showVol);
+    volEl.addEventListener('focusin',showVol);
+  }
+
+  var on=false, ctx=null, S=null, timer=0, stopT=0;
+  function lang(){return root.getAttribute('data-lang')==='en'?'en':'fr'}
+  function label(){
+    var en=lang()==='en', t=en?(on?'Turn the ambient sound off':'Turn the ambient sound on')
+                              :(on?'Couper l’ambiance sonore':'Activer l’ambiance sonore');
+    btn.setAttribute('aria-label',t);btn.setAttribute('title',t);
+    btn.setAttribute('aria-pressed',on?'true':'false');
+  }
+  function active(){return on&&!document.hidden}
+  function apply(){
+    label();
+    if(volEl){volEl.hidden=!on;if(on){showVol()}}
+    if(!ctx)return;
+    var now=ctx.currentTime;
+    if(stopT){clearTimeout(stopT);stopT=0}
+    S.g.master.gain.cancelScheduledValues(now);
+    S.g.master.gain.setValueAtTime(S.g.master.gain.value,now);
+    if(active()){
+      if(ctx.resume){ctx.resume()}
+      S.g.master.gain.linearRampToValueAtTime(tg(),now+2);
+      if(!timer){timer=setInterval(function(){schedule(S,ctx.currentTime+7)},500)}
+      schedule(S,now+7);
+    }else{
+      S.g.master.gain.linearRampToValueAtTime(0,now+.7);
+      if(timer){clearInterval(timer);timer=0}
+      stopT=setTimeout(function(){if(ctx&&!active()&&ctx.suspend){ctx.suspend()}},900);
+    }
+  }
+  btn.addEventListener('click',function(){
+    on=!on;
+    if(on&&!ctx){
+      try{ctx=new AC();S=start(ctx)}catch(e){on=false;ctx=null;label();return}
+    }
+    apply();
+  });
+  document.addEventListener('visibilitychange',apply);
+  if('MutationObserver' in window){new MutationObserver(label).observe(root,{attributes:true,attributeFilter:['data-lang']})}
+  label();
+  window.__radthalMusicState=function(){return {on:on,state:ctx&&ctx.state,t:ctx&&ctx.currentTime,gain:S&&S.g.master.gain.value,vol:vol}};
+})();
+</script>
+</body>
+</html>
