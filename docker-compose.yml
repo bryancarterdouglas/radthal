@@ -21,6 +21,7 @@ services:
       - -dnsseed=0             # pas de serveurs DNS : Radthal n'en a pas (pour l'instant)
       - -fixedseeds=0
       - -maxtipage=315360000   # le noeud ne se croit jamais "en synchronisation initiale" apres une longue coupure : les mineurs peuvent repartir
+      - -minimumchainwork=000000000000000000000000000000000000000000000000278424e424e42244   # ...mais un noeud neuf reste "en synchronisation" tant qu'il n'a pas rattrape la chaine (valeur du 25/10/2026)
       - -addnode=${SEED_NODE:?Renseigne SEED_NODE dans le fichier .env (voir env.example)}
 
   # Surveillance : alerte si la chaine se bloque, est reecrite, se divise, ou si le noeud est isole.

@@ -37,6 +37,7 @@ dnsseed=0
 fixedseeds=0
 addnode=NODE_ADDRESS:9333
 maxtipage=315360000
+minimumchainwork=000000000000000000000000000000000000000000000000278424e424e42244
 CONF
 sudo chown -R 1000:1000 ~/radthal-data && sudo chmod 600 ~/radthal-data/bitcoin.conf
 ```
@@ -98,7 +99,10 @@ When the miner finds a block, `docker logs ckpool` prints `BLOCK ACCEPTED`.
   `Bitcoin Core is in initial sync and waiting for blocks...` then `No bitcoinds active!`). On Bitcoin this never happens; on a small
   chain, a power cut or a miner left off for more than a day is enough, and nobody can mine the next block any more. This line turns
   that block off. If your node is already running without it: add it to `bitcoin.conf`, then `docker restart -t 120 radthal` (and
-  `docker restart ckpool` if the miners do not come back by themselves).
+  `docker restart ckpool` if the miners do not come back by themselves). The `minimumchainwork=000000000000000000000000000000000000000000000000278424e424e42244` line goes with it:
+  without it, a brand-new node would never consider itself "syncing" while it downloads the chain. With it, the node stays in sync mode
+  until it has caught up to that cumulative-work level (value taken on 25 October 2026 from a block about 1,000 blocks below the tip),
+  then `maxtipage` takes over. Never set a value higher than your chain's: the node would stay in "syncing" forever.
 - **Before block 25,000: rebuild the `ckpool` image and update the node** (`docker build -t radthal .` and
   `docker build -t ckpool -f mining/Dockerfile.ckpool mining`, then recreate both containers with the commands above). Without this,
   your blocks would be rejected by up-to-date nodes from block 25,000 on.

@@ -39,6 +39,7 @@ dnsseed=0
 fixedseeds=0
 addnode=ADRESSE_DU_NOEUD:9333
 maxtipage=315360000
+minimumchainwork=000000000000000000000000000000000000000000000000278424e424e42244
 CONF
 sudo chown -R 1000:1000 ~/radthal-data && sudo chmod 600 ~/radthal-data/bitcoin.conf
 ```
@@ -100,6 +101,10 @@ Quand le mineur trouve un bloc, `docker logs ckpool` affiche `BLOCK ACCEPTED`.
   une petite chaîne, une coupure de courant ou un mineur éteint plus d'un jour suffit, et personne ne peut plus miner le bloc
   suivant. Cette ligne désactive ce blocage. Si ton nœud tourne déjà sans elle : ajoute-la au `bitcoin.conf`, puis
   `docker restart -t 120 radthal` (et `docker restart ckpool` si les mineurs ne reviennent pas tout seuls).
+  La ligne `minimumchainwork=000000000000000000000000000000000000000000000000278424e424e42244` va avec elle : sans elle, un nœud neuf ne se croirait plus jamais « en synchronisation » pendant
+  qu'il télécharge la chaîne. Avec elle, il reste en synchronisation jusqu'à avoir rattrapé ce niveau de travail cumulé (valeur relevée
+  le 25 octobre 2026 sur un bloc d'environ 1 000 blocs sous la tête), puis `maxtipage` prend le relais. Ne mets jamais une valeur plus grande
+  que celle de ta chaîne : le nœud resterait « en synchronisation » pour toujours.
 - **Avant le bloc 25 000 : reconstruis l'image `ckpool` et mets le nœud à jour** (`docker build -t radthal .` et
   `docker build -t ckpool -f mining/Dockerfile.ckpool mining`, puis recrée les deux conteneurs avec les commandes ci-dessus).
   Sans cela, tes blocs seraient refusés par les nœuds à jour à partir du bloc 25 000.

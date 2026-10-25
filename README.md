@@ -288,8 +288,8 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 - **`docker compose` introuvable** : installe le plugin Compose, ou utilise `docker-compose` (avec un tiret).
 - **Le nœud dit « initial sync » alors qu'il est à jour, et plus aucun bloc n'est miné** : le dernier bloc a plus de 24 heures
   (coupure de courant, mineur éteint…), et Bitcoin Core refuse alors de fournir du travail aux mineurs. Le `docker-compose.yml` de ce
-  README applique déjà le réglage `-maxtipage=315360000`. Si tu as lancé ton nœud à la main (voir [MINER.md](MINER.md)), ajoute
-  `maxtipage=315360000` à son `bitcoin.conf` et redémarre-le.
+  README applique déjà les réglages `-maxtipage=315360000` et `-minimumchainwork`. Si tu as lancé ton nœud à la main (voir [MINER.md](MINER.md)), ajoute
+  `maxtipage=315360000` et `minimumchainwork` (valeur dans [MINER.md](MINER.md)) à son `bitcoin.conf` et redémarre-le.
 
 ## Avertissements
 
