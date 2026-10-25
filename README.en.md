@@ -286,9 +286,9 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
 - **The build stops silently or with "Killed"**: out of memory. Set `BUILD_JOBS=1` in `.env`.
 - **`docker compose` not found**: install the Compose plugin, or use `docker-compose` (with a hyphen).
 - **The node says "initial sync" although it is up to date, and no more blocks are mined**: the last block is more than 24 hours old
-  (power cut, miner off…), and Bitcoin Core then refuses to hand out work to miners. Add `maxtipage=315360000` to the `bitcoin.conf`
-  of the node used for mining (see [MINER.en.md](MINER.en.md)) and restart it. The plain node of this README, which does not mine, can do
-  without it.
+  (power cut, miner off…), and Bitcoin Core then refuses to hand out work to miners. The `docker-compose.yml` of this README already
+  applies the `-maxtipage=315360000` setting. If you started your node by hand (see [MINER.en.md](MINER.en.md)), add
+  `maxtipage=315360000` to its `bitcoin.conf` and restart it.
 
 ## Warnings
 

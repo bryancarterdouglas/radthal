@@ -287,9 +287,9 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 - **La compilation s'arrête sans message ou avec « Killed »** : manque de mémoire. Mets `BUILD_JOBS=1` dans `.env`.
 - **`docker compose` introuvable** : installe le plugin Compose, ou utilise `docker-compose` (avec un tiret).
 - **Le nœud dit « initial sync » alors qu'il est à jour, et plus aucun bloc n'est miné** : le dernier bloc a plus de 24 heures
-  (coupure de courant, mineur éteint…), et Bitcoin Core refuse alors de fournir du travail aux mineurs. Ajoute `maxtipage=315360000`
-  au `bitcoin.conf` du nœud qui sert au minage (voir [MINER.md](MINER.md)) et redémarre-le. Le nœud simple de ce README, qui ne
-  mine pas, peut s'en passer.
+  (coupure de courant, mineur éteint…), et Bitcoin Core refuse alors de fournir du travail aux mineurs. Le `docker-compose.yml` de ce
+  README applique déjà le réglage `-maxtipage=315360000`. Si tu as lancé ton nœud à la main (voir [MINER.md](MINER.md)), ajoute
+  `maxtipage=315360000` à son `bitcoin.conf` et redémarre-le.
 
 ## Avertissements
 
