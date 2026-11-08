@@ -65,7 +65,7 @@ share is taken out of the reward, nothing is added.
 - **It is public and verifiable.** The rule is in `radthal.patch` (functions `GetDevFeeAmount` and `GetDevFeeScript`): from block
   25,000 on, a block whose first transaction (the "coinbase") does not pay this share is rejected by up-to-date nodes (error
   `bad-cb-devfee`). Every affected block therefore contains an output to this address, visible in the block explorer.
-- **Update your node before block 25,000** (`git pull && docker compose up -d --build`, or the recipe in [MINER.en.md](MINER.en.md)).
+- **Update your node before block 25,000** (`git pull && sudo docker compose up -d --build`, or the recipe in [MINER.en.md](MINER.en.md)).
   A node that is not up to date also accepts blocks without this share, which up-to-date nodes reject: it would end up on a
   different chain from the rest of the network.
 - **If you mine with this repository's `ckpool`**, it pays the share by itself (it takes 2% of the total, fees included): just
@@ -103,8 +103,8 @@ Radthal node appears in "Known nodes" (address in the form name:port).
 sudo docker compose up -d --build
 ```
 
-On Ubuntu, Docker needs `sudo`: put it in front of the other `docker` commands in this guide too (or fix it once and for all, see
-[Troubleshooting](#troubleshooting): "permission denied"). No `sudo` needed if your account is already in the `docker` group.
+The `docker` commands in this guide start with `sudo`, which Ubuntu needs. If your account is already in the `docker` group, you can
+drop it (to stop needing it, see [Troubleshooting](#troubleshooting): "permission denied").
 
 The first time, Docker **compiles** Bitcoin Core: expect a few tens of minutes on a PC, over an hour on a Raspberry Pi. After that,
 startup is immediate.
@@ -115,28 +115,28 @@ No computer at hand? An Android phone can also run a node that verifies the chai
 ## Check that it works
 
 ```bash
-docker compose exec radthal radthal-cli getconnectioncount     # should print 1 or more
-docker compose exec radthal radthal-cli getblockchaininfo       # "blocks" should climb, then follow the chain
-docker compose exec radthal radthal-cli getblockhash 0          # should print the genesis hash above
+sudo docker compose exec radthal radthal-cli getconnectioncount     # should print 1 or more
+sudo docker compose exec radthal radthal-cli getblockchaininfo       # "blocks" should climb, then follow the chain
+sudo docker compose exec radthal radthal-cli getblockhash 0          # should print the genesis hash above
 ```
 
 If `getblockhash 0` prints anything other than the hash in the table, you are not on the right chain: do not go on.
 
-Live logs: `docker compose logs -f radthal` (Ctrl+C to quit, the node keeps running).
+Live logs: `sudo docker compose logs -f radthal` (Ctrl+C to quit, the node keeps running).
 
 ## Create a wallet
 
 ```bash
-docker compose exec radthal radthal-cli createwallet "mywallet"
-docker compose exec radthal radthal-cli -rpcwallet=mywallet getnewaddress
+sudo docker compose exec radthal radthal-cli createwallet "mywallet"
+sudo docker compose exec radthal radthal-cli -rpcwallet=mywallet getnewaddress
 ```
 
 The address you get starts with `rdt1`. **Back up your wallet** (`backupwallet`) and keep the copy somewhere other than the same
 machine: if the disk dies, the coins are lost.
 
 ```bash
-docker compose exec radthal radthal-cli -rpcwallet=mywallet backupwallet /data/backup.dat
-docker compose cp radthal:/data/backup.dat ./backup.dat
+sudo docker compose exec radthal radthal-cli -rpcwallet=mywallet backupwallet /data/backup.dat
+sudo docker compose cp radthal:/data/backup.dat ./backup.dat
 ```
 
 ## Receiving a payment: how many confirmations?
@@ -156,14 +156,14 @@ more power. They may come down as the network grows. Blocks you mine yourself ca
 To see where a payment stands:
 
 ```bash
-docker compose exec radthal radthal-cli -rpcwallet=mywallet listtransactions "*" 5     # "confirmations" field
-docker compose exec radthal radthal-cli -rpcwallet=mywallet gettransaction TRANSACTION_ID
+sudo docker compose exec radthal radthal-cli -rpcwallet=mywallet listtransactions "*" 5     # "confirmations" field
+sudo docker compose exec radthal radthal-cli -rpcwallet=mywallet gettransaction TRANSACTION_ID
 ```
 
 ## Monitoring and alerts
 
 The `watch` service in `docker-compose.yml` starts with the node. It checks every 30 seconds (competing branches every 10 minutes if
-`TIPS_CHECK_MINUTES` is above 0 in `.env`) and reports in the logs (`docker compose logs -f watch`):
+`TIPS_CHECK_MINUTES` is above 0 in `.env`) and reports in the logs (`sudo docker compose logs -f watch`):
 
 - **no new block** for `STALL_MINUTES` (120 by default): the miner is off, ckpool crashed…
 - **rewritten chain**: the latest blocks were replaced (alert from 2 blocks, "urgent" from 6);
@@ -172,10 +172,10 @@ The `watch` service in `docker-compose.yml` starts with the node. It checks ever
 
 To get alerts on your phone, install the free **ntfy** app, subscribe to a topic with a hard-to-guess name (for example
 `radthal-3fa9c21b7d40`; it is public: anyone who knows the name can read it), then put
-`NTFY_URL=https://ntfy.sh/radthal-3fa9c21b7d40` in `.env` and run `docker compose up -d` again. Test:
+`NTFY_URL=https://ntfy.sh/radthal-3fa9c21b7d40` in `.env` and run `sudo docker compose up -d` again. Test:
 
 ```bash
-docker compose exec watch python /app/radthal_watch.py --test-notify
+sudo docker compose exec watch python /app/radthal_watch.py --test-notify
 ```
 
 The search for competing branches asks the node for the list of **all** its dead branches. On a new node it is tiny and
@@ -197,7 +197,7 @@ the checkpoint protects the past, not the latest blocks.
 Good to know:
 
 - **It only protects nodes that have this version.** An older node would still follow an attacker's chain: update
-  (`git pull && docker compose up -d --build`).
+  (`git pull && sudo docker compose up -d --build`).
 - **It is a trust rule**: the project's creator chooses which block is authoritative. This is a deliberate choice for a small chain.
 - Headers your node already knows are never re-checked, so an update does not touch your existing chain.
 - To move it forward later: change `RADTHAL_CHECKPOINT_HEIGHT` and `RADTHAL_CHECKPOINT_HASH` in `radthal.patch` (file
@@ -206,7 +206,7 @@ Good to know:
 Check that your node is on the right chain at this point (must print the hash in the table):
 
 ```bash
-docker compose exec radthal radthal-cli getblockhash 20300
+sudo docker compose exec radthal radthal-cli getblockhash 20300
 ```
 
 ## Helping the network: open port 9333
@@ -277,9 +277,9 @@ Running a publicly reachable node? Open an "issue" so it can be added to the lis
 ## Update / stop
 
 ```bash
-docker compose stop            # clean stop (the node saves its state)
-docker compose up -d           # restart
-git pull && docker compose up -d --build     # update from the repository
+sudo docker compose stop            # clean stop (the node saves its state)
+sudo docker compose up -d           # restart
+git pull && sudo docker compose up -d --build     # update from the repository
 ```
 
 **Update before block 25,000**: the [developer share](#the-developer-share-2) then becomes a network rule, and a node that is not up
@@ -289,14 +289,14 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
 
 ## Troubleshooting
 
-- **0 connections**: the `SEED_NODE` address is wrong or the node is offline. Check `docker compose logs radthal`.
+- **0 connections**: the `SEED_NODE` address is wrong or the node is offline. Check `sudo docker compose logs radthal`.
   If you run two nodes at home, on the same router, the second one may fail to reach the first through its public address: put the
   first one's local address in `SEED_NODE` (of the form `192.168.x.x:9333`).
 - **The build stops silently or with "Killed"**: out of memory. Set `BUILD_JOBS=1` in `.env`.
 - **`docker compose` not found**: install the Compose plugin, or use `docker-compose` (with a hyphen).
 - **`permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`**: your user is not allowed to use
   Docker. Lasting fix: `sudo usermod -aG docker $USER`, then `newgrp docker` (or log out and back in), and run the command again.
-  Quick fix: put `sudo` in front of every `docker` command (including those in "Check that it works").
+  Quick fix: keep `sudo` in front of every `docker` command, as in this guide.
 - **`git: command not found`** (followed by "cd: radthal: No such file or directory" and "cp: cannot stat 'env.example'"): Git is not
   installed, so the `radthal` folder was never downloaded. Run `sudo apt install git`, then redo the first three lines.
 - **The node says "initial sync" although it is up to date, and no more blocks are mined**: the last block is more than 24 hours old

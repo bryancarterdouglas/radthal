@@ -65,7 +65,7 @@ la part est prélevée sur la récompense, rien n'est ajouté.
 - **C'est public et vérifiable.** La règle est dans `radthal.patch` (fonctions `GetDevFeeAmount` et `GetDevFeeScript`) : à partir du
   bloc 25 000, un bloc dont la première transaction (la « coinbase ») ne verse pas cette part est refusé par les nœuds à jour
   (erreur `bad-cb-devfee`). Chaque bloc concerné contient donc une sortie vers cette adresse, visible dans l'explorateur de blocs.
-- **Mets ton nœud à jour avant le bloc 25 000** (`git pull && docker compose up -d --build`, ou la recette de [MINER.md](MINER.md)).
+- **Mets ton nœud à jour avant le bloc 25 000** (`git pull && sudo docker compose up -d --build`, ou la recette de [MINER.md](MINER.md)).
   Un nœud qui n'est pas à jour accepte aussi des blocs sans cette part, que les nœuds à jour refusent : il se retrouverait sur une
   autre chaîne que le reste du réseau.
 - **Si tu mines avec le `ckpool` de ce dépôt**, il verse la part tout seul (il prélève 2 % du total, frais compris) : il suffit de
@@ -103,8 +103,8 @@ un autre nœud Radthal en ligne apparaît dans « Nœuds connus » (adresse de l
 sudo docker compose up -d --build
 ```
 
-Sous Ubuntu, Docker demande `sudo` : mets-le aussi devant les autres commandes `docker` de ce guide (ou règle-le une fois pour toutes,
-voir [Dépannage](#dépannage) : « permission denied »). Pas besoin de `sudo` si ton compte est déjà dans le groupe `docker`.
+Les commandes `docker` de ce guide commencent par `sudo`, nécessaire sous Ubuntu. Si ton compte est déjà dans le groupe `docker`, tu peux
+l'enlever (pour ne plus en avoir besoin, voir [Dépannage](#dépannage) : « permission denied »).
 
 La première fois, Docker **compile** Bitcoin Core : compte de quelques dizaines de minutes sur un PC à plus d'une heure
 sur un Raspberry Pi. Ensuite, le démarrage est immédiat.
@@ -115,28 +115,28 @@ joignable depuis l'extérieur) : voir **[NOEUD-TELEPHONE.md](NOEUD-TELEPHONE.md)
 ## Vérifier que ça marche
 
 ```bash
-docker compose exec radthal radthal-cli getconnectioncount     # doit afficher 1 ou plus
-docker compose exec radthal radthal-cli getblockchaininfo       # "blocks" doit grimper puis suivre la chaîne
-docker compose exec radthal radthal-cli getblockhash 0          # doit afficher le hash du genesis ci-dessus
+sudo docker compose exec radthal radthal-cli getconnectioncount     # doit afficher 1 ou plus
+sudo docker compose exec radthal radthal-cli getblockchaininfo       # "blocks" doit grimper puis suivre la chaîne
+sudo docker compose exec radthal radthal-cli getblockhash 0          # doit afficher le hash du genesis ci-dessus
 ```
 
 Si `getblockhash 0` affiche autre chose que le hash du tableau, tu n'es pas sur la bonne chaîne : ne continue pas.
 
-Les logs en direct : `docker compose logs -f radthal` (Ctrl+C pour quitter, le nœud continue de tourner).
+Les logs en direct : `sudo docker compose logs -f radthal` (Ctrl+C pour quitter, le nœud continue de tourner).
 
 ## Créer un portefeuille
 
 ```bash
-docker compose exec radthal radthal-cli createwallet "monportefeuille"
-docker compose exec radthal radthal-cli -rpcwallet=monportefeuille getnewaddress
+sudo docker compose exec radthal radthal-cli createwallet "monportefeuille"
+sudo docker compose exec radthal radthal-cli -rpcwallet=monportefeuille getnewaddress
 ```
 
 L'adresse obtenue commence par `rdt1`. **Sauvegarde ton portefeuille** (`backupwallet`) et garde la copie ailleurs que
 sur la même machine : si le disque meurt, les coins sont perdus.
 
 ```bash
-docker compose exec radthal radthal-cli -rpcwallet=monportefeuille backupwallet /data/sauvegarde.dat
-docker compose cp radthal:/data/sauvegarde.dat ./sauvegarde.dat
+sudo docker compose exec radthal radthal-cli -rpcwallet=monportefeuille backupwallet /data/sauvegarde.dat
+sudo docker compose cp radthal:/data/sauvegarde.dat ./sauvegarde.dat
 ```
 
 ## Recevoir un paiement : combien de confirmations ?
@@ -157,14 +157,14 @@ Les blocs que tu mines toi-même ne sont dépensables qu'après 100 confirmation
 Pour voir où en est un paiement :
 
 ```bash
-docker compose exec radthal radthal-cli -rpcwallet=monportefeuille listtransactions "*" 5     # champ "confirmations"
-docker compose exec radthal radthal-cli -rpcwallet=monportefeuille gettransaction IDENTIFIANT_DE_LA_TRANSACTION
+sudo docker compose exec radthal radthal-cli -rpcwallet=monportefeuille listtransactions "*" 5     # champ "confirmations"
+sudo docker compose exec radthal radthal-cli -rpcwallet=monportefeuille gettransaction IDENTIFIANT_DE_LA_TRANSACTION
 ```
 
 ## Surveillance et alertes
 
 Le service `watch` du `docker-compose.yml` démarre avec le nœud. Il vérifie toutes les 30 secondes (les branches concurrentes, toutes les 10 minutes si `TIPS_CHECK_MINUTES` est supérieur à 0 dans `.env`) et signale dans les logs
-(`docker compose logs -f watch`) :
+(`sudo docker compose logs -f watch`) :
 
 - **plus de nouveau bloc** depuis `STALL_MINUTES` (120 par défaut) : le mineur est éteint, ckpool est planté…
 - **chaîne réécrite** : les derniers blocs ont été remplacés (alerte à partir de 2 blocs, « urgente » à partir de 6) ;
@@ -173,10 +173,10 @@ Le service `watch` du `docker-compose.yml` démarre avec le nœud. Il vérifie t
 
 Pour recevoir les alertes sur ton téléphone, installe l'application gratuite **ntfy**, abonne-toi à un sujet au nom difficile à
 deviner (par exemple `radthal-3fa9c21b7d40`, c'est public : toute personne qui connaît le nom peut le lire), puis mets
-`NTFY_URL=https://ntfy.sh/radthal-3fa9c21b7d40` dans `.env` et relance `docker compose up -d`. Test :
+`NTFY_URL=https://ntfy.sh/radthal-3fa9c21b7d40` dans `.env` et relance `sudo docker compose up -d`. Test :
 
 ```bash
-docker compose exec watch python /app/radthal_watch.py --test-notify
+sudo docker compose exec watch python /app/radthal_watch.py --test-notify
 ```
 
 La recherche des branches concurrentes demande au nœud la liste de **toutes** ses branches mortes. Sur un nœud neuf, elle est
@@ -198,7 +198,7 @@ d'avant. Elle peut encore réécrire ce qui vient après : le point de contrôle
 À savoir :
 
 - **Il ne protège que les nœuds qui ont cette version.** Un nœud plus ancien suivrait toujours la chaîne d'un attaquant : mets à jour
-  (`git pull && docker compose up -d --build`).
+  (`git pull && sudo docker compose up -d --build`).
 - **C'est une règle de confiance** : le créateur du projet choisit quel bloc fait foi. C'est assumé pour une petite chaîne.
 - Les en-têtes que ton nœud connaît déjà ne sont jamais revérifiés, une mise à jour ne touche donc pas à ta chaîne existante.
 - Pour l'avancer plus tard : changer `RADTHAL_CHECKPOINT_HEIGHT` et `RADTHAL_CHECKPOINT_HASH` dans `radthal.patch` (fichier
@@ -207,7 +207,7 @@ d'avant. Elle peut encore réécrire ce qui vient après : le point de contrôle
 Vérifier que ton nœud est sur la bonne chaîne à cet endroit (doit afficher le hash du tableau) :
 
 ```bash
-docker compose exec radthal radthal-cli getblockhash 20300
+sudo docker compose exec radthal radthal-cli getblockhash 20300
 ```
 
 ## Aider le réseau : ouvrir le port 9333
@@ -279,9 +279,9 @@ Tu fais tourner un nœud ouvert au public ? Ouvre une « issue » pour qu'on l'a
 ## Mettre à jour / arrêter
 
 ```bash
-docker compose stop            # arrêt propre (le nœud sauvegarde son état)
-docker compose up -d           # redémarrage
-git pull && docker compose up -d --build     # mise à jour du dépôt
+sudo docker compose stop            # arrêt propre (le nœud sauvegarde son état)
+sudo docker compose up -d           # redémarrage
+git pull && sudo docker compose up -d --build     # mise à jour du dépôt
 ```
 
 **Mets à jour avant le bloc 25 000** : la [part du développeur](#la-part-du-développeur-2-) devient alors une règle du réseau, et un nœud qui n'est pas à jour se sépare des autres.
@@ -290,14 +290,14 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 
 ## Dépannage
 
-- **0 connexion** : l'adresse `SEED_NODE` est fausse ou le nœud est hors ligne. Vérifie dans `docker compose logs radthal`.
+- **0 connexion** : l'adresse `SEED_NODE` est fausse ou le nœud est hors ligne. Vérifie dans `sudo docker compose logs radthal`.
   Si tu fais tourner deux nœuds chez toi, sur la même box, le second peut ne pas réussir à joindre le premier par son adresse publique :
   mets alors dans `SEED_NODE` l'adresse locale du premier (du type `192.168.x.x:9333`).
 - **La compilation s'arrête sans message ou avec « Killed »** : manque de mémoire. Mets `BUILD_JOBS=1` dans `.env`.
 - **`docker compose` introuvable** : installe le plugin Compose, ou utilise `docker-compose` (avec un tiret).
 - **`permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`** : ton utilisateur n'a pas le droit
   d'utiliser Docker. Solution durable : `sudo usermod -aG docker $USER`, puis `newgrp docker` (ou ferme et rouvre ta session), et relance.
-  Solution rapide : mets `sudo` devant chaque commande `docker` (y compris celles de « Vérifier que ça marche »).
+  Solution rapide : garde `sudo` devant chaque commande `docker`, comme dans ce guide.
 - **`git : commande introuvable`** (puis « cd : radthal : aucun fichier ou dossier » et « cp : impossible d'évaluer env.example ») : Git
   n'est pas installé, donc le dossier `radthal` n'a pas été téléchargé. Tape `sudo apt install git`, puis refais les trois premières lignes.
 - **Le nœud dit « initial sync » alors qu'il est à jour, et plus aucun bloc n'est miné** : le dernier bloc a plus de 24 heures
@@ -321,7 +321,7 @@ Radthal is an experimental fork of **Bitcoin Core v31.1** with Bitcoin's rules (
 10-minute target, 210,000-block halving) on its own chain, with one open difference: from block 25,000 on, 2% of every block reward
 goes to the creator's address `rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6` (a consensus rule, announced in advance; see the French
 section "La part du développeur"; update your node before block 25,000). This repository builds a full node with Docker:
-`cp env.example .env`, set `SEED_NODE` to a running node, then `docker compose up -d --build`.
+`cp env.example .env`, set `SEED_NODE` to a running node, then `sudo docker compose up -d --build`.
 On Bitcoin, a home miner has practically no chance of finding a block solo; on this tiny new chain a single home miner still matters
 (for as long as few people mine), which makes it a hands-on learning playground, not an investment.
 Optional Umbrel web pages (author's own Raspberry Pi setup, not one-click): node, dashboard, mempool and ckpool views, plus a wallet
