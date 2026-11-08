@@ -103,6 +103,8 @@ Radthal node appears in "Known nodes" (address in the form name:port).
 docker compose up -d --build
 ```
 
+If Docker answers "permission denied", see [Troubleshooting](#troubleshooting) (meanwhile, put `sudo` in front of the command).
+
 The first time, Docker **compiles** Bitcoin Core: expect a few tens of minutes on a PC, over an hour on a Raspberry Pi. After that,
 startup is immediate.
 
@@ -291,6 +293,9 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
   first one's local address in `SEED_NODE` (of the form `192.168.x.x:9333`).
 - **The build stops silently or with "Killed"**: out of memory. Set `BUILD_JOBS=1` in `.env`.
 - **`docker compose` not found**: install the Compose plugin, or use `docker-compose` (with a hyphen).
+- **`permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`**: your user is not allowed to use
+  Docker. Lasting fix: `sudo usermod -aG docker $USER`, then `newgrp docker` (or log out and back in), and run the command again.
+  Quick fix: put `sudo` in front of every `docker` command (including those in "Check that it works").
 - **`git: command not found`** (followed by "cd: radthal: No such file or directory" and "cp: cannot stat 'env.example'"): Git is not
   installed, so the `radthal` folder was never downloaded. Run `sudo apt install git`, then redo the first three lines.
 - **The node says "initial sync" although it is up to date, and no more blocks are mined**: the last block is more than 24 hours old

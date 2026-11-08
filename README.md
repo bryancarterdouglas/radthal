@@ -103,6 +103,8 @@ un autre nœud Radthal en ligne apparaît dans « Nœuds connus » (adresse de l
 docker compose up -d --build
 ```
 
+Si Docker répond « permission denied », voir le [Dépannage](#dépannage) (en attendant, mets `sudo` devant la commande).
+
 La première fois, Docker **compile** Bitcoin Core : compte de quelques dizaines de minutes sur un PC à plus d'une heure
 sur un Raspberry Pi. Ensuite, le démarrage est immédiat.
 
@@ -292,6 +294,9 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
   mets alors dans `SEED_NODE` l'adresse locale du premier (du type `192.168.x.x:9333`).
 - **La compilation s'arrête sans message ou avec « Killed »** : manque de mémoire. Mets `BUILD_JOBS=1` dans `.env`.
 - **`docker compose` introuvable** : installe le plugin Compose, ou utilise `docker-compose` (avec un tiret).
+- **`permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`** : ton utilisateur n'a pas le droit
+  d'utiliser Docker. Solution durable : `sudo usermod -aG docker $USER`, puis `newgrp docker` (ou ferme et rouvre ta session), et relance.
+  Solution rapide : mets `sudo` devant chaque commande `docker` (y compris celles de « Vérifier que ça marche »).
 - **`git : commande introuvable`** (puis « cd : radthal : aucun fichier ou dossier » et « cp : impossible d'évaluer env.example ») : Git
   n'est pas installé, donc le dossier `radthal` n'a pas été téléchargé. Tape `sudo apt install git`, puis refais les trois premières lignes.
 - **Le nœud dit « initial sync » alors qu'il est à jour, et plus aucun bloc n'est miné** : le dernier bloc a plus de 24 heures
