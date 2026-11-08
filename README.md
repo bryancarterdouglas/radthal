@@ -95,9 +95,8 @@ cp env.example .env
 ```
 
 Le fichier `.env` contient déjà la ligne `SEED_NODE=radthal-seed.duckdns.org:9333` : c'est l'adresse du nœud du créateur, le seul nœud
-connu pour l'instant (voir « Nœuds connus » plus bas). **Tu n'as rien à changer** : laisse-la telle quelle. Ne la remplace que par
-l'adresse d'un autre nœud Radthal en ligne (nom:port), ou par l'adresse locale de ton propre nœud si les deux machines sont sur la
-même box (par exemple `192.168.1.20:9333`) : beaucoup de box ne laissent pas un appareil du réseau joindre sa propre adresse publique.
+connu pour l'instant (voir « Nœuds connus » plus bas). **Tu n'as rien à changer** : laisse-la telle quelle. Tu ne la remplaces que si
+un autre nœud Radthal en ligne apparaît dans « Nœuds connus » (adresse de la forme nom:port).
 
 ```bash
 docker compose up -d --build
@@ -288,6 +287,8 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 ## Dépannage
 
 - **0 connexion** : l'adresse `SEED_NODE` est fausse ou le nœud est hors ligne. Vérifie dans `docker compose logs radthal`.
+  Si tu fais tourner deux nœuds chez toi, sur la même box, le second peut ne pas réussir à joindre le premier par son adresse publique :
+  mets alors dans `SEED_NODE` l'adresse locale du premier (par exemple `192.168.1.20:9333`).
 - **La compilation s'arrête sans message ou avec « Killed »** : manque de mémoire. Mets `BUILD_JOBS=1` dans `.env`.
 - **`docker compose` introuvable** : installe le plugin Compose, ou utilise `docker-compose` (avec un tiret).
 - **`git : commande introuvable`** (puis « cd : radthal : aucun fichier ou dossier » et « cp : impossible d'évaluer env.example ») : Git
