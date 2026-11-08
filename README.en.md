@@ -95,9 +95,8 @@ cp env.example .env
 ```
 
 The `.env` file already contains the line `SEED_NODE=radthal-seed.duckdns.org:9333`: this is the creator's node, the only known node for
-now (see "Known nodes" below). **You do not need to change anything**: leave it as it is. Replace it only with the address of another
-running Radthal node (name:port), or with the local address of your own node if both machines are on the same router (for example
-`192.168.1.20:9333`): many routers do not let a device on the network reach its own public address.
+now (see "Known nodes" below). **You do not need to change anything**: leave it as it is. Replace it only if another running
+Radthal node appears in "Known nodes" (address in the form name:port).
 
 ```bash
 docker compose up -d --build
@@ -287,6 +286,8 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
 ## Troubleshooting
 
 - **0 connections**: the `SEED_NODE` address is wrong or the node is offline. Check `docker compose logs radthal`.
+  If you run two nodes at home, on the same router, the second one may fail to reach the first through its public address: put the
+  first one's local address in `SEED_NODE` (for example `192.168.1.20:9333`).
 - **The build stops silently or with "Killed"**: out of memory. Set `BUILD_JOBS=1` in `.env`.
 - **`docker compose` not found**: install the Compose plugin, or use `docker-compose` (with a hyphen).
 - **`git: command not found`** (followed by "cd: radthal: No such file or directory" and "cp: cannot stat 'env.example'"): Git is not
