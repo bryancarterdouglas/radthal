@@ -114,7 +114,10 @@ class Any(metaclass=Meta):
     """Accepte tout appel et tout attribut."""
     def __init__(self, *a, **k): pass
     def __call__(self, *a, **k): return Any()
-    def __getattr__(self, n): return Any()
+    def __getattr__(self, n):
+        if n.startswith("__"):          # les outils de Python (copie, inspection...) ne doivent pas tourner en boucle sur la fausse bibliotheque
+            raise AttributeError(n)
+        return Any()
     def __iter__(self): return iter(())
     def __bool__(self): return True
 
