@@ -76,6 +76,23 @@ la part est prélevée sur la récompense, rien n'est ajouté.
 - **Pas d'accord avec cette règle ?** Radthal est un logiciel libre : tu peux garder l'ancienne version, mais tu suivras alors ta
   propre chaîne, séparée de celle-ci.
 
+## Ubuntu : installation en un clic
+
+Sur Ubuntu, le plus simple est le paquet **`.deb`** : il installe l'application **Radthal** (une icône dans le menu, sa propre fenêtre,
+sans navigateur) et un service qui fait tourner le nœud en arrière-plan, y compris au démarrage de l'ordinateur.
+
+1. Télécharge le fichier `radthal_….deb` sur la [page des versions](https://github.com/bryancarterdouglas/radthal/releases/latest).
+2. Dans un terminal : `cd ~/Téléchargements && sudo apt install ./radthal_*_all.deb`
+3. Ouvre **Radthal** dans le menu des applications.
+
+Docker est nécessaire : s'il manque, l'application propose de l'installer. Le premier démarrage télécharge le nœud tout fait (quelques
+minutes, sans rien compiler). Testé sur une version récente d'Ubuntu ; les autres distributions ne sont pas testées. Tes données (chaîne,
+portefeuille) sont dans le volume Docker `radthal_radthal-data`, le même que pour l'installation ci-dessous : si tu avais déjà lancé le
+nœud avec `git clone`, arrête-le d'abord (`cd radthal && sudo docker compose down`, **sans** `-v`). Détails dans
+[`packaging/ubuntu`](packaging/ubuntu/README.md).
+
+Pas sur Ubuntu, ou tu préfères tout voir ? Continue avec l'installation ci-dessous.
+
 ## Ce qu'il te faut
 
 - Un ordinateur ou un Raspberry Pi sous Linux avec **Docker** (et le plugin `docker compose`) et **Git** installés. Sur Ubuntu ou Debian, Git

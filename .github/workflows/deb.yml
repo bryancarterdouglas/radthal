@@ -3,7 +3,7 @@ name: Paquet Ubuntu
 
 on:
   push:
-    branches: [main, appli-un-clic]
+    branches: [main]
     tags: ["v*"]
     paths:
       - packaging/ubuntu/**

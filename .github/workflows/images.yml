@@ -4,13 +4,12 @@
 #   ghcr.io/bryancarterdouglas/radthal             le noeud (amd64 = PC, arm64 = Raspberry Pi)
 #   ghcr.io/bryancarterdouglas/radthal-interface   les pages web
 #
-# Declenchement : a chaque changement du noeud ou des pages sur main (etiquette "latest"), sur la branche de
-# travail (etiquette = nom de la branche), sur une version "v1.2.3", ou a la main (onglet Actions).
+# Declenchement : a chaque changement du noeud ou des pages sur main (etiquette "latest"), sur une version "v1.2.3", ou a la main (onglet Actions).
 name: Images Docker
 
 on:
   push:
-    branches: [main, appli-un-clic]
+    branches: [main]
     tags: ["v*"]
     paths:
       - Dockerfile

@@ -76,6 +76,22 @@ share is taken out of the reward, nothing is added.
 - **Disagree with this rule?** Radthal is free software: you can keep the old version, but you will then follow your own chain,
   separate from this one.
 
+## Ubuntu: one-click install
+
+On Ubuntu, the simplest way is the **`.deb`** package: it installs the **Radthal** application (a menu icon, its own window, no browser)
+and a service that runs the node in the background, including at boot.
+
+1. Download the `radthal_….deb` file from the [releases page](https://github.com/bryancarterdouglas/radthal/releases/latest).
+2. In a terminal: `cd ~/Downloads && sudo apt install ./radthal_*_all.deb`
+3. Open **Radthal** from the applications menu.
+
+Docker is required: if it is missing, the application offers to install it. The first start downloads the ready-made node (a few
+minutes, nothing to compile). Tested on a recent Ubuntu release; other distributions are untested. Your data (chain, wallet) lives in the
+Docker volume `radthal_radthal-data`, the same one the installation below uses: if you already ran the node with `git clone`, stop it
+first (`cd radthal && sudo docker compose down`, **without** `-v`). Details in [`packaging/ubuntu`](packaging/ubuntu/README.md).
+
+Not on Ubuntu, or you prefer to see everything? Carry on with the installation below.
+
 ## What you need
 
 - A computer or Raspberry Pi running Linux with **Docker** (and the `docker compose` plugin) and **Git** installed. On Ubuntu or Debian,
