@@ -1,0 +1,128 @@
+# Construit les images Docker de Radthal et les publie sur ghcr.io (le registre de GitHub).
+# Ainsi, installer Radthal ne demande plus de compiler le noeud (10 a 60 minutes) : on telecharge l'image.
+#
+#   ghcr.io/bryancarterdouglas/radthal             le noeud (amd64 = PC, arm64 = Raspberry Pi)
+#   ghcr.io/bryancarterdouglas/radthal-interface   les pages web
+#
+# Declenchement : a chaque changement du noeud ou des pages sur main (etiquette "latest"), sur la branche de
+# travail (etiquette = nom de la branche), sur une version "v1.2.3", ou a la main (onglet Actions).
+name: Images Docker
+
+on:
+  push:
+    branches: [main, appli-un-clic]
+    tags: ["v*"]
+    paths:
+      - Dockerfile
+      - radthal.patch
+      - interface/**
+      - .github/workflows/images.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  NODE_IMAGE: ghcr.io/bryancarterdouglas/radthal
+  UI_IMAGE: ghcr.io/bryancarterdouglas/radthal-interface
+
+jobs:
+  # Le noeud est compile sur une machine de chaque architecture (pas d'emulation : ce serait des heures).
+  node:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04, platform: linux/amd64, name: amd64 }
+          - { runner: ubuntu-24.04-arm, platform: linux/arm64, name: arm64 }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          build-args: JOBS=4
+          outputs: type=image,name=${{ env.NODE_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=node-${{ matrix.name }}
+          cache-to: type=gha,scope=node-${{ matrix.name }},mode=max
+      - name: Garder l'empreinte de l'image de cette architecture
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.name }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Reunit les deux architectures sous un seul nom : "docker pull" choisit la bonne tout seul.
+  node-manifest:
+    needs: node
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v3
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.NODE_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publier l'image multi-architecture
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.NODE_IMAGE }}@sha256:%s ' *)
+      - name: Verifier
+        run: docker buildx imagetools inspect ${{ env.NODE_IMAGE }}:${{ steps.meta.outputs.version }}
+
+  # Les pages web : un peu de Python, construit pour les deux architectures.
+  interface:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.UI_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./interface
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

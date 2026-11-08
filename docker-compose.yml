@@ -11,7 +11,10 @@ services:
     restart: unless-stopped
     stop_grace_period: 60s
     ports:
-      - "9333:9333"            # seul port ouvert : le reseau P2P. Le RPC reste prive.
+      - "9333:9333"            # le reseau P2P. Le RPC reste prive.
+      # Pages web (service "interface" plus bas) : par defaut visibles seulement depuis ce PC.
+      # Pour les voir depuis un autre appareil du reseau, mets UI_BIND=0.0.0.0 dans .env (voir env.example).
+      - "${UI_BIND:-127.0.0.1}:3777-3782:3777-3782"
     volumes:
       - radthal-data:/data
     command:
@@ -44,5 +47,31 @@ services:
       TIPS_CHECK_MINUTES: ${TIPS_CHECK_MINUTES:-10}
     command: ["python", "-u", "/app/radthal_watch.py"]
 
+  # Pages web : noeud (3777), tableau de bord (3778), mempool (3779), portefeuille (3781), horodatage (3782).
+  # Elles partagent le reseau du noeud (les ports sont publies par le service "radthal" ci-dessus) et lisent son cookie RPC en lecture seule.
+  interface:
+    build: ./interface
+    image: radthal-interface:latest
+    restart: unless-stopped
+    network_mode: "service:radthal"
+    depends_on:
+      - radthal
+    user: "1000:1000"
+    volumes:
+      - radthal-data:/data:ro
+      - radthal-ui:/state
+    environment:
+      DEVICE: pc
+      DOWN_HINT: "(dans un terminal : sudo docker compose up -d)"
+      RPC: http://127.0.0.1:8332
+      PASSFILE: /data/.cookie
+      WALLET: ${WALLET_NAME:-monportefeuille}
+      BACKUP_DIR: /data
+      BACKUP_SHOW: "/data (volume Docker radthal_radthal-data)"
+      STATE_DIR: /state
+      STATE_SHOW: "/state (volume Docker radthal_radthal-ui)"
+      VIEWS: ${UI_VIEWS:-node,dashboard,mempool,wallet,stamp}
+
 volumes:
   radthal-data:
+  radthal-ui:
