@@ -78,7 +78,8 @@ la part est prélevée sur la récompense, rien n'est ajouté.
 
 ## Ce qu'il te faut
 
-- Un ordinateur ou un Raspberry Pi sous Linux avec **Docker** (et le plugin `docker compose`) installé.
+- Un ordinateur ou un Raspberry Pi sous Linux avec **Docker** (et le plugin `docker compose`) et **Git** installés. Sur Ubuntu ou Debian, Git
+  n'est pas toujours là : `sudo apt install git` (sans lui, `git clone` répond « commande introuvable »).
 - 4 Go de RAM conseillés pour compiler (sinon mets `BUILD_JOBS=1` dans `.env`) et quelques Go libres.
 - Une connexion internet. La chaîne est encore toute petite : la synchronisation prend quelques minutes.
 
@@ -286,6 +287,8 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 - **0 connexion** : l'adresse `SEED_NODE` est fausse ou le nœud est hors ligne. Vérifie dans `docker compose logs radthal`.
 - **La compilation s'arrête sans message ou avec « Killed »** : manque de mémoire. Mets `BUILD_JOBS=1` dans `.env`.
 - **`docker compose` introuvable** : installe le plugin Compose, ou utilise `docker-compose` (avec un tiret).
+- **`git : commande introuvable`** (puis « cd : radthal : aucun fichier ou dossier » et « cp : impossible d'évaluer env.example ») : Git
+  n'est pas installé, donc le dossier `radthal` n'a pas été téléchargé. Tape `sudo apt install git`, puis refais les trois premières lignes.
 - **Le nœud dit « initial sync » alors qu'il est à jour, et plus aucun bloc n'est miné** : le dernier bloc a plus de 24 heures
   (coupure de courant, mineur éteint…), et Bitcoin Core refuse alors de fournir du travail aux mineurs. Le `docker-compose.yml` de ce
   README applique déjà les réglages `-maxtipage=315360000` et `-minimumchainwork`. Si tu as lancé ton nœud à la main (voir [MINER.md](MINER.md)), ajoute

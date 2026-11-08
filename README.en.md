@@ -78,7 +78,8 @@ share is taken out of the reward, nothing is added.
 
 ## What you need
 
-- A computer or Raspberry Pi running Linux with **Docker** (and the `docker compose` plugin) installed.
+- A computer or Raspberry Pi running Linux with **Docker** (and the `docker compose` plugin) and **Git** installed. On Ubuntu or Debian,
+  Git is not always there: `sudo apt install git` (without it, `git clone` answers "command not found").
 - 4 GB of RAM recommended for compiling (otherwise set `BUILD_JOBS=1` in `.env`) and a few GB of free space.
 - An internet connection. The chain is still very small: syncing takes a few minutes.
 
@@ -285,6 +286,8 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
 - **0 connections**: the `SEED_NODE` address is wrong or the node is offline. Check `docker compose logs radthal`.
 - **The build stops silently or with "Killed"**: out of memory. Set `BUILD_JOBS=1` in `.env`.
 - **`docker compose` not found**: install the Compose plugin, or use `docker-compose` (with a hyphen).
+- **`git: command not found`** (followed by "cd: radthal: No such file or directory" and "cp: cannot stat 'env.example'"): Git is not
+  installed, so the `radthal` folder was never downloaded. Run `sudo apt install git`, then redo the first three lines.
 - **The node says "initial sync" although it is up to date, and no more blocks are mined**: the last block is more than 24 hours old
   (power cut, miner off…), and Bitcoin Core then refuses to hand out work to miners. The `docker-compose.yml` of this README already
   applies the `-maxtipage=315360000` and `-minimumchainwork` settings. If you started your node by hand (see [MINER.en.md](MINER.en.md)), add
