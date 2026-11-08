@@ -124,6 +124,10 @@ If `getblockhash 0` prints anything other than the hash in the table, you are no
 
 Live logs: `sudo docker compose logs -f radthal` (Ctrl+C to quit, the node keeps running).
 
+**The web pages** start together with the node. Open in your browser: <http://localhost:3777> (the node), `:3778` (dashboard),
+`:3779` (mempool), `:3781` (wallet), `:3782` (timestamping). They are only visible from this PC. Details in
+[The interface](#the-interface-optional).
+
 ## Create a wallet
 
 ```bash
@@ -241,7 +245,22 @@ rewrite. The step-by-step guide (node + `ckpool` mining server) is in **[MINER.e
 
 ## The interface (optional)
 
-To follow and use their node without the command line, the author runs six small web pages on his Raspberry Pi (Umbrel).
+To follow and use your node without the command line, Radthal has small web pages. With the Docker install in this guide they start
+together with the node: nothing more to install (Python, no libraries). On Umbrel they are the apps of the
+[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal) repository.
+
+| Page | Address (on this PC) |
+|---|---|
+| Node | <http://localhost:3777> |
+| Dashboard | <http://localhost:3778> |
+| Mempool | <http://localhost:3779> |
+| Wallet | <http://localhost:3781> |
+| Timestamping | <http://localhost:3782> |
+
+By default these addresses only work **from the node's own computer**. To open them from another device on your network, set
+`UI_BIND=0.0.0.0` in `.env` (see `env.example`): as long as your wallet has no password, anyone on your network could then send your
+RDT. The **ckpool** page is not started by default: it is for people who mine with ckpool (add `ckpool` to `UI_VIEWS` in `.env`, or use
+the Umbrel app).
 
 **Four pages to look at**: **node**, **dashboard**, **mempool** and **ckpool**. They refresh every 3 seconds and are **read-only**:
 they change nothing. These are real screenshots of a running node (balance hidden, local network address replaced). The miner's
@@ -281,9 +300,13 @@ with a Radthal node can read it, nobody can erase or edit it. Never put anything
 the last 3,000 blocks, written by anyone: they are neither verified nor moderated, and only the text is shown (never a clickable
 link, image or code). Photos and videos do not fit: only a small amount of text can be written.
 
-The files are in the **[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)** repository. They are made for the
-author's setup and use files from his Raspberry Pi: this is **not** a one-click install for everyone. The pages are plain HTTP on the
-local network: never expose them to the Internet. The Docker node in this repository does not need them.
+*First launch of the wallet.* If the node has no wallet yet, the Wallet page offers to **create it in one click** (default name
+`monportefeuille`, changeable with `WALLET_NAME` in `.env`). Then protect it with a password and make a backup (see
+[Create a wallet](#create-a-wallet)).
+
+The pages are plain HTTP: never expose them to the Internet. The pages' code is in the [`interface/`](interface/) folder; the Umbrel
+apps (which use files from the author's Raspberry Pi) are in the **[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**
+repository.
 
 ## Known nodes
 
@@ -316,6 +339,9 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
 - **`permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`**: your user is not allowed to use
   Docker. Lasting fix: `sudo usermod -aG docker $USER`, then `newgrp docker` (or log out and back in), and run the command again.
   Quick fix: keep `sudo` in front of every `docker` command, as in this guide.
+- **A web page does not open (`localhost:3777`…)**: check that the `interface` service is running (`sudo docker compose ps`) and read
+  its messages: `sudo docker compose logs interface`. After an update, restart with `sudo docker compose up -d --build`. If the page
+  says the node does not answer, the node has just started or is stopped: wait a minute, then `sudo docker compose ps`.
 - **`git: command not found`** (followed by "cd: radthal: No such file or directory" and "cp: cannot stat 'env.example'"): Git is not
   installed, so the `radthal` folder was never downloaded. Run `sudo apt install git`, then redo the first three lines.
 - **The node says "initial sync" although it is up to date, and no more blocks are mined**: the last block is more than 24 hours old

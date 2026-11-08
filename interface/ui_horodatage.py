@@ -697,7 +697,8 @@ def human_error(err):
     if code == -15:
         return "Le portefeuille n'est pas chiffré : aucun mot de passe n'est nécessaire."
     if code == -18 or "not loaded" in low or "does not exist" in low and "wallet" in low:
-        return "Le portefeuille « %s » n'est pas chargé sur le nœud." % WALLET
+        return ("Le portefeuille « %s » n'est pas chargé sur le nœud." % WALLET
+                + (" Crée-le d'un clic dans la page Portefeuille (port 3781)." if DEVICE == "pc" else ""))
     if code == -6 or "insufficient funds" in low or "exceeds your balance" in low:
         return ("Solde disponible insuffisant pour payer les frais. Les récompenses de minage ne sont "
                 "utilisables qu'après 100 blocs.")

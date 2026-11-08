@@ -124,6 +124,10 @@ Si `getblockhash 0` affiche autre chose que le hash du tableau, tu n'es pas sur 
 
 Les logs en direct : `sudo docker compose logs -f radthal` (Ctrl+C pour quitter, le nœud continue de tourner).
 
+**Les pages web** démarrent en même temps que le nœud. Ouvre dans ton navigateur : <http://localhost:3777> (le nœud),
+`:3778` (tableau de bord), `:3779` (mempool), `:3781` (portefeuille), `:3782` (horodatage). Elles ne sont visibles que depuis ce PC.
+Détails dans [L'interface](#linterface-facultatif).
+
 ## Créer un portefeuille
 
 ```bash
@@ -242,7 +246,22 @@ difficile à réécrire. Le guide pas à pas (nœud + serveur de minage `ckpool`
 
 ## L'interface (facultatif)
 
-Pour suivre et utiliser son nœud sans ligne de commande, l'auteur a six petites pages web sur son Raspberry Pi (Umbrel).
+Pour suivre et utiliser son nœud sans ligne de commande, Radthal a de petites pages web. Avec l'installation Docker de ce guide, elles
+démarrent en même temps que le nœud : il n'y a rien de plus à installer (Python, aucune bibliothèque). Sur Umbrel, ce sont les applications
+du dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal).
+
+| Page | Adresse (sur ce PC) |
+|---|---|
+| Nœud | <http://localhost:3777> |
+| Tableau de bord | <http://localhost:3778> |
+| Mempool | <http://localhost:3779> |
+| Portefeuille | <http://localhost:3781> |
+| Horodatage | <http://localhost:3782> |
+
+Par défaut, ces adresses ne marchent que **depuis l'ordinateur du nœud**. Pour les ouvrir depuis un autre appareil de ton réseau, mets
+`UI_BIND=0.0.0.0` dans `.env` (voir `env.example`) : tant que ton portefeuille n'est pas protégé par un mot de passe, toute personne de
+ton réseau pourrait alors y envoyer tes RDT. La page **ckpool** n'est pas lancée par défaut : elle sert à ceux qui minent avec ckpool
+(ajoute `ckpool` à `UI_VIEWS` dans `.env`, ou utilise l'application Umbrel).
 
 **Quatre pages pour regarder** : **nœud**, **tableau de bord**, **mempool** et **ckpool**. Elles se mettent à jour toutes les
 3 secondes et ne servent qu'à **regarder** : elles ne modifient rien. Ce sont de vraies captures d'un nœud en marche (solde masqué,
@@ -283,9 +302,13 @@ page affiche aussi les messages des 3 000 derniers blocs, écrits par n'importe 
 texte est affiché (jamais de lien cliquable, d'image ni de code). Les photos et les vidéos ne passent pas : seule une petite
 quantité de texte peut être écrite.
 
-Les fichiers sont dans le dépôt **[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**. Ils sont faits pour
-l'installation de l'auteur et utilisent des fichiers de son Raspberry Pi : ce n'est **pas** une installation en un clic pour tout le
-monde. Les pages sont en HTTP sur le réseau local : ne les expose jamais sur Internet. Le nœud Docker de ce dépôt n'en a pas besoin.
+*Premier lancement du portefeuille.* Si le nœud n'a pas encore de portefeuille, la page Portefeuille te propose de le **créer d'un clic**
+(nom par défaut `monportefeuille`, changeable avec `WALLET_NAME` dans `.env`). Pense ensuite à le protéger par un mot de passe, puis à faire
+une sauvegarde (voir [Créer un portefeuille](#créer-un-portefeuille)).
+
+Les pages sont en HTTP : ne les expose jamais sur Internet. Le code des pages est dans le dossier [`interface/`](interface/) ; les
+applications Umbrel (qui utilisent des fichiers du Raspberry Pi de l'auteur) sont dans le dépôt
+**[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**.
 
 ## Nœuds connus
 
@@ -317,6 +340,9 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 - **`permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`** : ton utilisateur n'a pas le droit
   d'utiliser Docker. Solution durable : `sudo usermod -aG docker $USER`, puis `newgrp docker` (ou ferme et rouvre ta session), et relance.
   Solution rapide : garde `sudo` devant chaque commande `docker`, comme dans ce guide.
+- **Une page web ne s'ouvre pas (`localhost:3777`…)** : vérifie que le service `interface` tourne (`sudo docker compose ps`) et regarde
+  ses messages : `sudo docker compose logs interface`. Après une mise à jour, relance avec `sudo docker compose up -d --build`. Si la
+  page affiche « Le nœud ne répond pas », le nœud vient de démarrer ou est arrêté : attends une minute, puis `sudo docker compose ps`.
 - **`git : commande introuvable`** (puis « cd : radthal : aucun fichier ou dossier » et « cp : impossible d'évaluer env.example ») : Git
   n'est pas installé, donc le dossier `radthal` n'a pas été téléchargé. Tape `sudo apt install git`, puis refais les trois premières lignes.
 - **Le nœud dit « initial sync » alors qu'il est à jour, et plus aucun bloc n'est miné** : le dernier bloc a plus de 24 heures
