@@ -136,8 +136,12 @@ machine: if the disk dies, the coins are lost.
 
 ```bash
 sudo docker compose exec radthal radthal-cli -rpcwallet=mywallet backupwallet /data/backup.dat
-sudo docker compose cp radthal:/data/backup.dat ./backup.dat
+sudo cp "$(sudo docker volume inspect radthal_radthal-data --format '{{ .Mountpoint }}')/backup.dat" ./backup.dat
+sudo chown $USER: backup.dat
 ```
+
+The `backup.dat` file appears in the `radthal` folder (about 24,576 bytes). This copy goes through the disk rather than
+`docker compose cp`, which answers "permission denied" when Docker was installed with snap (common on Ubuntu).
 
 ## Receiving a payment: how many confirmations?
 

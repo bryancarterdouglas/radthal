@@ -136,8 +136,12 @@ sur la même machine : si le disque meurt, les coins sont perdus.
 
 ```bash
 sudo docker compose exec radthal radthal-cli -rpcwallet=monportefeuille backupwallet /data/sauvegarde.dat
-sudo docker compose cp radthal:/data/sauvegarde.dat ./sauvegarde.dat
+sudo cp "$(sudo docker volume inspect radthal_radthal-data --format '{{ .Mountpoint }}')/sauvegarde.dat" ./sauvegarde.dat
+sudo chown $USER: sauvegarde.dat
 ```
+
+Le fichier `sauvegarde.dat` apparaît dans le dossier `radthal` (24 576 octets environ). Cette copie passe par le disque et non par
+`docker compose cp`, qui répond « permission denied » quand Docker a été installé avec snap (cas fréquent sous Ubuntu).
 
 ## Recevoir un paiement : combien de confirmations ?
 
