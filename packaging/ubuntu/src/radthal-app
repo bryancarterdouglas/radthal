@@ -182,6 +182,7 @@ def run_gui():
     os.environ.setdefault("WEBKIT_DISABLE_DMABUF_RENDERER", "1")       # evite une fenetre blanche avec certains pilotes graphiques
     import gi
     gi.require_version("Gtk", "3.0")
+    gi.require_version("Gdk", "3.0")                                   # sans ca, Ubuntu 24.04 charge Gdk 4 et Gtk 3 echoue
     try:
         gi.require_version("WebKit2", "4.1")
     except ValueError:

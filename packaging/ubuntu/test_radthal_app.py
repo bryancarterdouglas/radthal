@@ -142,16 +142,33 @@ class Fake(unittest.TestCase):
         glib.set_prgname = lambda n: None
         glib.set_application_name = lambda n: None
         glib.UserDirectory = types.SimpleNamespace(DIRECTORY_DOWNLOAD=1)
-        repo = types.ModuleType("gi.repository")
-        for n in ("Gtk", "Gdk", "Gio", "WebKit2"):
+        # Comme le vrai PyGObject : un espace de noms importe sans version choisie avant prend la plus recente (Gdk 4, par exemple),
+        # et Gtk 3 echoue ensuite. Ici, importer Gdk / Gtk / WebKit2 sans avoir demande la bonne version leve la meme erreur.
+        required = self.required = {}
+        want = {"Gtk": ("3.0",), "Gdk": ("3.0",), "WebKit2": ("4.1", "4.0")}
+
+        class Repo(types.ModuleType):
+            def __getattr__(self, name):
+                if name in want and required.get(name) not in want[name]:
+                    raise ImportError("Requiring namespace '%s' version '%s', but another version is already loaded"
+                                      % (name, want[name][0]))
+                raise AttributeError(name)
+        repo = Repo("gi.repository")
+        for n in ("Gio",):
             setattr(repo, n, FakeModule(n))
+        self.faked = {n: FakeModule(n) for n in want}
+        for n in want:
+            self.faked[n].__name__ = n
         repo.GLib = glib
-        repo.WebKit2.PolicyDecisionType = types.SimpleNamespace(NAVIGATION_ACTION=0, NEW_WINDOW_ACTION=1, RESPONSE=2)
+        self.faked["WebKit2"].PolicyDecisionType = types.SimpleNamespace(NAVIGATION_ACTION=0, NEW_WINDOW_ACTION=1, RESPONSE=2)
         gi = types.ModuleType("gi")
-        gi.require_version = lambda *a: None
+
+        def require_version(ns, ver):
+            required[ns] = ver
+            setattr(repo, ns, self.faked[ns]) if ns in self.faked and ver in want[ns] else None
+        gi.require_version = require_version
         gi.repository = repo
         sys.modules["gi"], sys.modules["gi.repository"] = gi, repo
-        self.repo = repo
 
     def tearDown(self):
         for k, v in self.saved.items():
@@ -174,7 +191,7 @@ class Fake(unittest.TestCase):
 
     def run_window_flow(self):
         captured = {}
-        Gtk = self.repo.Gtk
+        Gtk = self.faked["Gtk"]
 
         class App(Gtk.Application):
             def run(self, argv):
@@ -200,7 +217,7 @@ class Fake(unittest.TestCase):
         self.assertFalse(win.ready)
         win.apply("running", "", "active", state)
         # navigation
-        types_ = self.repo.WebKit2.PolicyDecisionType
+        types_ = self.faked["WebKit2"].PolicyDecisionType
 
         def decision(uri):
             d = Any()
