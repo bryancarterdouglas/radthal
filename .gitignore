@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+
+# Ne jamais envoyer sur GitHub : configuration locale et sauvegardes de portefeuille
+.env
+*.dat
