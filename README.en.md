@@ -287,7 +287,7 @@ Your data (chain and wallet) is in the Docker volume `radthal_radthal-data` and 
 
 - **0 connections**: the `SEED_NODE` address is wrong or the node is offline. Check `docker compose logs radthal`.
   If you run two nodes at home, on the same router, the second one may fail to reach the first through its public address: put the
-  first one's local address in `SEED_NODE` (for example `192.168.1.20:9333`).
+  first one's local address in `SEED_NODE` (of the form `192.168.x.x:9333`).
 - **The build stops silently or with "Killed"**: out of memory. Set `BUILD_JOBS=1` in `.env`.
 - **`docker compose` not found**: install the Compose plugin, or use `docker-compose` (with a hyphen).
 - **`git: command not found`** (followed by "cd: radthal: No such file or directory" and "cp: cannot stat 'env.example'"): Git is not

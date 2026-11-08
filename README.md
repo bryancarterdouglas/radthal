@@ -288,7 +288,7 @@ Tes données (chaîne et portefeuille) sont dans le volume Docker `radthal_radth
 
 - **0 connexion** : l'adresse `SEED_NODE` est fausse ou le nœud est hors ligne. Vérifie dans `docker compose logs radthal`.
   Si tu fais tourner deux nœuds chez toi, sur la même box, le second peut ne pas réussir à joindre le premier par son adresse publique :
-  mets alors dans `SEED_NODE` l'adresse locale du premier (par exemple `192.168.1.20:9333`).
+  mets alors dans `SEED_NODE` l'adresse locale du premier (du type `192.168.x.x:9333`).
 - **La compilation s'arrête sans message ou avec « Killed »** : manque de mémoire. Mets `BUILD_JOBS=1` dans `.env`.
 - **`docker compose` introuvable** : installe le plugin Compose, ou utilise `docker-compose` (avec un tiret).
 - **`git : commande introuvable`** (puis « cd : radthal : aucun fichier ou dossier » et « cp : impossible d'évaluer env.example ») : Git
