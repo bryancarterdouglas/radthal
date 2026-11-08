@@ -89,6 +89,7 @@ Première fois sur Linux ? Le [tutoriel vidéo pour débutant](https://youtu.be/
 toutes les étapes ci-dessous, une par une.
 
 ```bash
+sudo apt install git        # Ubuntu / Debian, seulement si git n'est pas encore installé
 git clone https://github.com/bryancarterdouglas/radthal.git
 cd radthal
 cp env.example .env
