@@ -143,6 +143,17 @@ sudo chown $USER: sauvegarde.dat
 Le fichier `sauvegarde.dat` apparaît dans le dossier `radthal` (24 576 octets environ). Cette copie passe par le disque et non par
 `docker compose cp`, qui répond « permission denied » quand Docker a été installé avec snap (cas fréquent sous Ubuntu).
 
+**Vérifie que la sauvegarde est bonne** en la restaurant sous un autre nom (rien n'est écrasé) :
+
+```bash
+sudo docker compose exec radthal radthal-cli restorewallet "test-restauration" /data/sauvegarde.dat
+sudo docker compose exec radthal radthal-cli -rpcwallet=test-restauration getaddressesbylabel ""
+sudo docker compose exec radthal radthal-cli unloadwallet "test-restauration"
+```
+
+La deuxième commande doit afficher la même adresse `rdt1…` que ton portefeuille d'origine. Le fichier `.dat` est une base de données
+SQLite qui contient tes clés privées : ne l'ouvre pas dans un éditeur et ne l'envoie à personne.
+
 ## Recevoir un paiement : combien de confirmations ?
 
 Chaque nouveau bloc au-dessus d'une transaction est une « confirmation ». Plus il y en a, plus il est difficile de réécrire la

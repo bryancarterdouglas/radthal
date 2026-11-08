@@ -143,6 +143,17 @@ sudo chown $USER: backup.dat
 The `backup.dat` file appears in the `radthal` folder (about 24,576 bytes). This copy goes through the disk rather than
 `docker compose cp`, which answers "permission denied" when Docker was installed with snap (common on Ubuntu).
 
+**Check that the backup is good** by restoring it under another name (nothing is overwritten):
+
+```bash
+sudo docker compose exec radthal radthal-cli restorewallet "restore-test" /data/backup.dat
+sudo docker compose exec radthal radthal-cli -rpcwallet=restore-test getaddressesbylabel ""
+sudo docker compose exec radthal radthal-cli unloadwallet "restore-test"
+```
+
+The second command must show the same `rdt1…` address as your original wallet. The `.dat` file is an SQLite database that contains your
+private keys: do not open it in an editor and do not send it to anyone.
+
 ## Receiving a payment: how many confirmations?
 
 Every new block on top of a transaction is a "confirmation". The more there are, the harder it is to rewrite the transaction.
