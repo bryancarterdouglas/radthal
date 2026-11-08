@@ -42,6 +42,14 @@ def _auth_header():
     s = open(PASSFILE).read().strip()
     cred = s if s.startswith("__cookie__:") else RPCUSER + ":" + s
     return "Basic " + base64.b64encode(cred.encode()).decode()
+
+
+def ports_rows():
+    """Les ports affiches sur la page : le port RPC vient de l'adresse RPC ; le port des mineurs n'existe qu'avec ckpool (Umbrel)."""
+    rows = [["P2P (réseau)", "9333"], ["RPC (local)", str(urllib.parse.urlsplit(RPC).port or 9332)]]
+    if DEVICE != "pc":
+        rows.append(["Stratum (mineurs)", STRATUM])
+    return rows
 LOGS = os.environ.get("LOGS", "/ckpool/logs")
 PORT = int(os.environ.get("PORT", "8000"))
 WALLET = os.environ.get("WALLET", "minage")
@@ -450,7 +458,7 @@ def view_node():
         [p.get("addr"), str(p.get("subver", "")).strip("/"), "entrant" if p.get("inbound") else "sortant",
          fsize(p.get("bytesrecv")), fsize(p.get("bytessent")), {"age": p.get("conntime")}]
         for p in peers], "Aucun pair connecté pour l'instant."))
-    secs.append(kv("ports", "Ports", [["P2P (réseau)", "9333"], ["RPC (local)", "9332"], ["Stratum (mineurs)", STRATUM]]))
+    secs.append(kv("ports", "Ports", ports_rows()))
     return secs, info
 
 

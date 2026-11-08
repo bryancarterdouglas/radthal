@@ -23,6 +23,11 @@ permissions:
   contents: read
   packages: write
 
+# Un nouveau changement annule la construction precedente de la meme branche (inutile de la finir).
+concurrency:
+  group: images-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NODE_IMAGE: ghcr.io/bryancarterdouglas/radthal
   UI_IMAGE: ghcr.io/bryancarterdouglas/radthal-interface
