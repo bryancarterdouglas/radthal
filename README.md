@@ -100,10 +100,11 @@ connu pour l'instant (voir « Nœuds connus » plus bas). **Tu n'as rien à chan
 un autre nœud Radthal en ligne apparaît dans « Nœuds connus » (adresse de la forme nom:port).
 
 ```bash
-docker compose up -d --build
+sudo docker compose up -d --build
 ```
 
-Si Docker répond « permission denied », voir le [Dépannage](#dépannage) (en attendant, mets `sudo` devant la commande).
+Sous Ubuntu, Docker demande `sudo` : mets-le aussi devant les autres commandes `docker` de ce guide (ou règle-le une fois pour toutes,
+voir [Dépannage](#dépannage) : « permission denied »). Pas besoin de `sudo` si ton compte est déjà dans le groupe `docker`.
 
 La première fois, Docker **compile** Bitcoin Core : compte de quelques dizaines de minutes sur un PC à plus d'une heure
 sur un Raspberry Pi. Ensuite, le démarrage est immédiat.

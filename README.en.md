@@ -100,10 +100,11 @@ now (see "Known nodes" below). **You do not need to change anything**: leave it 
 Radthal node appears in "Known nodes" (address in the form name:port).
 
 ```bash
-docker compose up -d --build
+sudo docker compose up -d --build
 ```
 
-If Docker answers "permission denied", see [Troubleshooting](#troubleshooting) (meanwhile, put `sudo` in front of the command).
+On Ubuntu, Docker needs `sudo`: put it in front of the other `docker` commands in this guide too (or fix it once and for all, see
+[Troubleshooting](#troubleshooting): "permission denied"). No `sudo` needed if your account is already in the `docker` group.
 
 The first time, Docker **compiles** Bitcoin Core: expect a few tens of minutes on a PC, over an hour on a Raspberry Pi. After that,
 startup is immediate.
