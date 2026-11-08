@@ -174,6 +174,10 @@ The `watch` service in `docker-compose.yml` starts with the node. It checks ever
 - a **competing branch** of 2 blocks or more, or an **invalid block** rejected by the node;
 - **isolated node** (0 connections for 15 minutes) or **unreachable node**.
 
+**On a brand-new node**, the very first line may be a "no new block for 881 h" alert (last block: height 0). This is normal: the node
+starts at the genesis block and has not caught up with the chain yet. The alert closes by itself a few seconds later ("the chain
+restarts"). The `maxtipage` advice it gives is already applied by `docker-compose.yml`: ignore it.
+
 To get alerts on your phone, install the free **ntfy** app, subscribe to a topic with a hard-to-guess name (for example
 `radthal-3fa9c21b7d40`; it is public: anyone who knows the name can read it), then put
 `NTFY_URL=https://ntfy.sh/radthal-3fa9c21b7d40` in `.env` and run `sudo docker compose up -d` again. Test:

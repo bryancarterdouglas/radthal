@@ -175,6 +175,10 @@ Le service `watch` du `docker-compose.yml` démarre avec le nœud. Il vérifie t
 - **branche concurrente** de 2 blocs ou plus, ou **bloc invalide** rejeté par le nœud ;
 - **nœud isolé** (0 connexion pendant 15 minutes) ou **nœud injoignable**.
 
+**Sur un nœud neuf**, la toute première ligne peut être une alerte « plus de nouveau bloc depuis 881 h » (dernier bloc : hauteur 0). C'est
+normal : le nœud démarre au bloc genesis et n'a pas encore rattrapé la chaîne. L'alerte se referme toute seule quelques secondes plus tard
+(« la chaîne repart »). Le conseil `maxtipage` qu'elle donne est déjà appliqué par le `docker-compose.yml` : ignore-le.
+
 Pour recevoir les alertes sur ton téléphone, installe l'application gratuite **ntfy**, abonne-toi à un sujet au nom difficile à
 deviner (par exemple `radthal-3fa9c21b7d40`, c'est public : toute personne qui connaît le nom peut le lire), puis mets
 `NTFY_URL=https://ntfy.sh/radthal-3fa9c21b7d40` dans `.env` et relance `sudo docker compose up -d`. Test :
