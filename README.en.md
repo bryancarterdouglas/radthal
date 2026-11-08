@@ -94,7 +94,10 @@ cd radthal
 cp env.example .env
 ```
 
-Open `.env` and replace `SEED_NODE` with the address of a running Radthal node (see "Known nodes" below).
+The `.env` file already contains the line `SEED_NODE=radthal-seed.duckdns.org:9333`: this is the creator's node, the only known node for
+now (see "Known nodes" below). **You do not need to change anything**: leave it as it is. Replace it only with the address of another
+running Radthal node (name:port), or with the local address of your own node if both machines are on the same router (for example
+`192.168.1.20:9333`): many routers do not let a device on the network reach its own public address.
 
 ```bash
 docker compose up -d --build

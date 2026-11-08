@@ -94,7 +94,10 @@ cd radthal
 cp env.example .env
 ```
 
-Ouvre `.env` et remplace `SEED_NODE` par l'adresse d'un nœud Radthal en ligne (voir « Nœuds connus » plus bas).
+Le fichier `.env` contient déjà la ligne `SEED_NODE=radthal-seed.duckdns.org:9333` : c'est l'adresse du nœud du créateur, le seul nœud
+connu pour l'instant (voir « Nœuds connus » plus bas). **Tu n'as rien à changer** : laisse-la telle quelle. Ne la remplace que par
+l'adresse d'un autre nœud Radthal en ligne (nom:port), ou par l'adresse locale de ton propre nœud si les deux machines sont sur la
+même box (par exemple `192.168.1.20:9333`) : beaucoup de box ne laissent pas un appareil du réseau joindre sa propre adresse publique.
 
 ```bash
 docker compose up -d --build
