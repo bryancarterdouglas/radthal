@@ -71,6 +71,7 @@ services:
       STATE_DIR: /state
       STATE_SHOW: "/state (volume Docker radthal_radthal-ui)"
       VIEWS: ${UI_VIEWS:-node,dashboard,mempool,wallet,stamp}
+      SHOW_PEER_ADDR: ${SHOW_PEER_ADDR:-0}
 
 volumes:
   radthal-data:
