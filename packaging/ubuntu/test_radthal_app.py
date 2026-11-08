@@ -161,22 +161,27 @@ class Fake(unittest.TestCase):
                 sys.modules[k] = v
 
     def test_window_flow(self):
-        captured = {}
-        orig = app.threading.Thread
+        # Les "threads" de la fenetre s'executent ici tout de suite, et rien ne touche au reseau ni a systemd :
+        # un vrai thread encore en cours a la fin du programme fait planter Python au hasard.
+        saved = (app.threading.Thread, app.fetch_json, app.service_state)
         app.threading.Thread = lambda target=None, daemon=None, **k: types.SimpleNamespace(start=lambda: target())
+        app.fetch_json = lambda *a, **k: None
+        app.service_state = lambda: "inactive"
         try:
-            # on recupere la classe Win en interceptant App().run
-            real_run = None
-            Gtk = self.repo.Gtk
-
-            class App(Gtk.Application):
-                def run(self, argv):
-                    captured["app"] = self
-                    return 0
-            Gtk.Application = App
-            self.assertEqual(app.run_gui(), 0)
+            self.run_window_flow()
         finally:
-            app.threading.Thread = orig
+            app.threading.Thread, app.fetch_json, app.service_state = saved
+
+    def run_window_flow(self):
+        captured = {}
+        Gtk = self.repo.Gtk
+
+        class App(Gtk.Application):
+            def run(self, argv):
+                captured["app"] = self
+                return 0
+        Gtk.Application = App
+        self.assertEqual(app.run_gui(), 0)
         a = captured["app"]
         # l'App fabriquee par run_gui est la classe interne : on la reutilise pour creer la fenetre
         a.do_activate()
