@@ -2120,4 +2120,4 @@ if __name__ == "__main__":
         threading.Thread(target=wallet_loop, daemon=True).start()
     else:
         threading.Thread(target=msg_loop, daemon=True).start()
-    ThreadingHTTPServer(("0.0.0.0", PORT), H).serve_forever()
+    ThreadingHTTPServer((os.environ.get("BIND", "0.0.0.0"), PORT), H).serve_forever()

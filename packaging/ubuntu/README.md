@@ -36,7 +36,7 @@ La fenêtre elle-même (GTK / WebKit) ne peut être vue que sur un Ubuntu avec �
 ## Installer
 
 ```bash
-sudo apt install ./radthal_0.1.2_all.deb
+sudo apt install ./radthal_0.1.3_all.deb
 ```
 
 Puis ouvrir **Radthal** dans le menu des applications. État du nœud sans fenêtre : `radthal-app --status`. Journal : `journalctl -u radthal`.

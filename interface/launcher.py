@@ -4,6 +4,8 @@
   node 3777 | dashboard 3778 | mempool 3779 | ckpool 3780 | wallet 3781 | stamp 3782
 
 VIEWS (variable d'environnement) choisit les pages a lancer, par exemple VIEWS=node,wallet.
+HUB_PORT=3790 ajoute un menu commun (hub.py) : toutes les pages deviennent joignables par ce seul port, et elles
+n'ecoutent plus qu'en local (127.0.0.1). Sert aux endroits qui n'ouvrent qu'un port (application Umbrel).
 Les reglages des pages (RPC, PASSFILE, WALLET, STATE_DIR...) sont lus par les pages elles-memes.
 """
 import os
@@ -29,12 +31,19 @@ def main():
     unknown = [v for v in views if v not in PAGES]
     if unknown or not views:
         sys.exit("VIEWS inconnu : %s (choix possibles : %s)" % (",".join(unknown) or "(vide)", ",".join(PAGES)))
+    hub_port = os.environ.get("HUB_PORT", "").strip()
+    if hub_port and not hub_port.isdigit():
+        sys.exit("HUB_PORT doit etre un numero de port : %s" % hub_port)
     procs = {}                  # vue -> {"p": processus ou None, "since": lancement, "fails": arrets rapides de suite, "retry": heure du prochain essai}
     stopping = []
 
     def start(v):
+        if v == "hub":
+            return subprocess.Popen([sys.executable, "-u", os.path.join(HERE, "hub.py")], env=dict(os.environ, VIEWS=",".join(views)))
         script, port = PAGES[v]
         env = dict(os.environ, VIEW=v, PORT=str(port))
+        if hub_port:
+            env["BIND"] = "127.0.0.1"                       # seul le menu commun est joignable de l'exterieur
         return subprocess.Popen([sys.executable, "-u", os.path.join(HERE, script)], env=env)
 
     def stop(*_):
@@ -45,9 +54,9 @@ def main():
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
-    for v in views:
+    for v in views + (["hub"] if hub_port else []):
         procs[v] = {"p": start(v), "since": time.time(), "fails": 0, "retry": 0}
-        print("page %s : port %d" % (v, PAGES[v][1]), flush=True)
+        print("page %s : port %s" % (v, hub_port if v == "hub" else PAGES[v][1]), flush=True)
     while not stopping:
         time.sleep(1)
         now = time.time()

@@ -26,6 +26,8 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y python3-yaml python3-pil
       - name: Tests de l'application
         run: python3 packaging/ubuntu/test_radthal_app.py
+      - name: Tests du menu commun des pages
+        run: python3 interface/test_hub.py
       - name: Construire le paquet
         run: bash packaging/ubuntu/build-deb.sh
       - name: Verifier le paquet

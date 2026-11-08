@@ -26,7 +26,7 @@ done
 # images toutes faites ; si elles sont introuvables, le service compile ces dossiers sur l'ordinateur
 python3 "$HERE/make-compose.py" "$REPO/docker-compose.yml" "$ROOT/usr/share/radthal/docker-compose.yml"
 cp "$REPO/Dockerfile" "$REPO/radthal.patch" "$ROOT/usr/share/radthal/build/node/"
-cp "$REPO"/interface/Dockerfile "$REPO"/interface/launcher.py "$REPO"/interface/ui_*.py "$ROOT/usr/share/radthal/build/interface/"
+cp "$REPO"/interface/Dockerfile "$REPO"/interface/launcher.py "$REPO"/interface/hub.py "$REPO"/interface/ui_*.py "$ROOT/usr/share/radthal/build/interface/"
 
 python3 - "$REPO/docs/logo-radthal.png" "$ROOT/usr/share/icons/hicolor" <<'PY'
 import os, sys

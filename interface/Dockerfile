@@ -7,7 +7,7 @@ LABEL org.opencontainers.image.source="https://github.com/bryancarterdouglas/rad
       org.opencontainers.image.licenses="MIT"
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
-COPY ui_node.py ui_dashboard.py ui_wallet.py ui_horodatage.py launcher.py /app/
+COPY ui_node.py ui_dashboard.py ui_wallet.py ui_horodatage.py launcher.py hub.py /app/
 # /state : la liste des horodatages (volume, garde entre deux mises a jour). Meme utilisateur (1000) que le noeud.
 RUN mkdir /state && chown 1000:1000 /state
 USER 1000:1000
