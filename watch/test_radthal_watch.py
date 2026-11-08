@@ -29,6 +29,7 @@ class FakeChain:
         self.ibd = False
         self.headers_ahead = 0      # en-tetes connus mais blocs pas encore telecharges
         self.down = False
+        self.tip_age = 60           # age du dernier bloc en secondes (bloc genesis d'un noeud neuf : tres vieux)
         self.tips_calls = 0
         g = self._new(None, 0)
         self.active.append(g)
@@ -76,7 +77,7 @@ class FakeChain:
 
     def rpc_getblockheader(self, hsh):
         height, prev = self.blocks[hsh]
-        return {"hash": hsh, "height": height, "time": 10_000_000 - 60, "previousblockhash": prev}  # il y a 1 min
+        return {"hash": hsh, "height": height, "time": 10_000_000 - self.tip_age, "previousblockhash": prev}
 
     def rpc_getconnectioncount(self):
         return self.conns
@@ -342,6 +343,34 @@ class TestWatcher(Base):
         self.assertEqual(self.alerts[0][0], 4)
         self.assertIn("plus de nouveau bloc", self.alerts[0][1])
         self.assertIn("maxtipage", self.alerts[0][2])
+
+    def test_fresh_node_is_silent_during_startup_grace(self):
+        # Noeud neuf : bloc genesis vieux de 881 h, en synchronisation initiale, pas encore de pairs ni de blocs.
+        chain = FakeChain()
+        chain.tip_age = 881 * 3600
+        chain.ibd = True
+        alerts = []
+        w = rw.Watcher(chain, lambda p, t, b: alerts.append((p, t, b)), dict(CFG), clock=self.clock, log=lambda m: None)
+        w.poll()                                       # premier controle : pas de fausse alerte
+        self.clock.advance(0.5)
+        w.poll()
+        self.assertEqual(alerts, [])
+        chain.mine(1)                                  # les blocs arrivent : tout va bien, rien a signaler
+        self.clock.advance(0.5)
+        w.poll()
+        self.assertEqual(alerts, [])
+
+    def test_fresh_node_still_stuck_after_grace_is_reported(self):
+        chain = FakeChain()
+        chain.tip_age = 881 * 3600
+        chain.ibd = True
+        alerts = []
+        w = rw.Watcher(chain, lambda p, t, b: alerts.append((p, t, b)), dict(CFG), clock=self.clock, log=lambda m: None)
+        w.poll()
+        self.clock.advance(4)                          # plus de 3 minutes, toujours aucun bloc
+        w.poll()
+        self.assertEqual(len(alerts), 1)
+        self.assertIn("plus de nouveau bloc", alerts[0][1])
 
     def test_normal_stall_alert_does_not_mention_maxtipage(self):
         self.clock.advance(500)

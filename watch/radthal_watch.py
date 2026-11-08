@@ -54,6 +54,7 @@ import urllib.request
 WINDOW = 500          # nombre de blocs recents gardes en memoire pour detecter une reorg
 START_WINDOW = 50     # au demarrage on n'en charge que 50
 RECENT = 1000         # on ne s'interesse qu'aux branches des 1000 derniers blocs
+STARTUP_GRACE = 180   # secondes : un noeud qui se croit en synchronisation initiale a ce delai pour rattraper la chaine
 
 
 class RpcError(Exception):
@@ -150,6 +151,7 @@ class Watcher:
         self.tip_hash = None
         self.chain = {}            # hauteur -> hash (chaine active recente)
         self.last_change = None    # moment ou le dernier bloc est apparu
+        self.started = None        # moment du premier controle
         self.active = {}           # alertes en cours : cle -> debut
         self.seen_tips = {}        # hash -> hauteur, seulement les branches recentes
         self.next_tips_check = 0.0
@@ -216,6 +218,7 @@ class Watcher:
             self.chain[x] = self.rpc("getblockhash", x)
         hdr = self.rpc("getblockheader", tip)
         self.tip_h, self.tip_hash = h, tip
+        self.started = now
         self.last_change = min(hdr.get("time", now), now)
         if self._tips_enabled():
             tips = self._fetch_tips(now)
@@ -286,6 +289,10 @@ class Watcher:
         ibd = bool(info.get("initialblockdownload"))
         # Un noeud qui rattrape vraiment la chaine (des en-tetes en avance sur les blocs) n'est pas bloque.
         if ibd and info.get("headers", h) > h:
+            return
+        # Noeud neuf : il demarre au bloc genesis (vieux de plusieurs centaines d'heures) et n'a pas encore
+        # trouve ses pairs. On lui laisse STARTUP_GRACE secondes avant de parler de blocage.
+        if ibd and now - self.started < STARTUP_GRACE:
             return
         age = now - self.last_change
         if age > self.cfg["stall_min"] * 60:
