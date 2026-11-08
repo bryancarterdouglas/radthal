@@ -1,0 +1,17 @@
+Package: radthal
+Version: @VERSION@
+Section: net
+Priority: optional
+Architecture: all
+Maintainer: Radthal Community <noreply@github.com>
+Depends: python3, python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1 | gir1.2-webkit2-4.0, pkexec | policykit-1, systemd
+Suggests: docker.io | docker-ce
+Homepage: https://github.com/bryancarterdouglas/radthal
+Description: Radthal : noeud complet et application
+ Radthal est un fork de Bitcoin Core (SHA-256, RDT). Ce paquet installe l'application
+ "Radthal" (une fenetre avec le noeud, le tableau de bord, le mempool, le portefeuille
+ et l'horodatage) et un service qui fait tourner le noeud avec Docker, en arriere-plan
+ et au demarrage de l'ordinateur.
+ .
+ Docker est necessaire : s'il manque, l'application propose de l'installer.
+ Projet experimental, sans valeur garantie.

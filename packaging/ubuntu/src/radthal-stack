@@ -1,0 +1,138 @@
+#!/bin/bash
+# Moteur du paquet Radthal : demarre / arrete le noeud et les pages (Docker). Lance en root par le service
+# systemd "radthal" (ou par l'application, via pkexec). Il ecrit son avancement dans /run/radthal/status
+# (lisible par tous) et son journal dans /run/radthal/log.
+#
+#   radthal-stack up | down            demarrer / arreter les conteneurs (appele par systemd)
+#   radthal-stack start | stop | restart   piloter le service (appele par l'application)
+#   radthal-stack install-docker       installer Docker (apt) puis relancer le service
+#   radthal-stack export-backups       copier les sauvegardes dans Documents/Sauvegardes Radthal (pkexec/sudo)
+set -u
+SHARE="${RADTHAL_SHARE:-/usr/share/radthal}"
+ETC="${RADTHAL_ETC:-/etc/radthal}"
+RUN="${RADTHAL_RUN:-/run/radthal}"
+PATH="$PATH:/snap/bin:/usr/local/bin:/usr/sbin:/sbin"
+export PATH
+PROJECT="radthal"
+
+mkdir -p "$RUN" && chmod 755 "$RUN"
+
+status() {      # status <code> [detail] : etat lu par l'application
+    printf '%s\n%s\n' "$1" "${2:-}" > "$RUN/status.tmp" && chmod 644 "$RUN/status.tmp" && mv -f "$RUN/status.tmp" "$RUN/status"
+    echo "[radthal] $1 ${2:-}"
+}
+
+load_config() {
+    if [ -f "$ETC/radthal.env" ]; then
+        set -a; . "$ETC/radthal.env"; set +a
+    fi
+    NODE_IMAGE="ghcr.io/bryancarterdouglas/radthal:${RADTHAL_TAG:-latest}"
+    UI_IMAGE="ghcr.io/bryancarterdouglas/radthal-interface:${RADTHAL_TAG:-latest}"
+    export NODE_IMAGE UI_IMAGE
+}
+
+find_docker() { DOCKER="$(command -v docker || true)"; }
+
+compose() {     # le fichier est lu sur l'entree standard : Docker installe par snap ne voit pas /usr/share
+    "$DOCKER" compose -p "$PROJECT" -f - "$@" < "$SHARE/docker-compose.yml"
+}
+
+ensure_image() {    # ensure_image <image> <dossier de construction>
+    status pulling "$1"
+    if "$DOCKER" pull "$1"; then
+        return 0
+    fi
+    if "$DOCKER" image inspect "$1" >/dev/null 2>&1; then
+        echo "[radthal] telechargement impossible : image deja presente utilisee"
+        return 0
+    fi
+    status building "Compilation sur cet ordinateur de $1 (10 a 60 minutes la premiere fois)"
+    tar -C "$2" -cf - . | "$DOCKER" build -t "$1" -
+}
+
+cmd_up() {
+    : > "$RUN/log"; chmod 644 "$RUN/log"
+    exec > >(tee -a "$RUN/log") 2>&1
+    load_config
+    find_docker
+    if [ -z "$DOCKER" ]; then
+        status docker-missing "Docker n'est pas installe"
+        exit 0
+    fi
+    status waiting-docker "En attente de Docker"
+    for _ in $(seq 1 "${RADTHAL_DOCKER_WAIT:-90}"); do
+        "$DOCKER" info >/dev/null 2>&1 && break
+        sleep 2
+    done
+    if ! "$DOCKER" info >/dev/null 2>&1; then
+        status error "Docker ne repond pas (verifie : sudo systemctl status docker)"
+        exit 1
+    fi
+    if ! "$DOCKER" compose version >/dev/null 2>&1; then
+        status compose-missing "Le module Docker Compose n'est pas installe"
+        exit 0
+    fi
+    ensure_image "$NODE_IMAGE" "$SHARE/build/node" || { status error "Impossible d'obtenir l'image du noeud"; exit 1; }
+    ensure_image "$UI_IMAGE" "$SHARE/build/interface" || { status error "Impossible d'obtenir l'image des pages"; exit 1; }
+    status starting "Demarrage du noeud"
+    if ! compose up -d --remove-orphans; then
+        status error "Docker n'a pas pu demarrer le noeud (voir le journal)"
+        exit 1
+    fi
+    status running "Le noeud est demarre"
+}
+
+cmd_down() {
+    load_config
+    find_docker
+    [ -n "$DOCKER" ] && compose stop || true
+    status stopped "Le noeud est arrete"
+}
+
+cmd_install_docker() {
+    export DEBIAN_FRONTEND=noninteractive
+    find_docker
+    if [ -z "$DOCKER" ]; then
+        apt-get update && apt-get install -y docker.io docker-compose-v2 || exit 1
+    elif ! "$DOCKER" compose version >/dev/null 2>&1; then
+        apt-get update && apt-get install -y docker-compose-v2 || exit 1
+    fi
+    systemctl restart --no-block radthal.service
+}
+
+cmd_export_backups() {
+    # Copie les sauvegardes du portefeuille et la liste des horodatages (qui sont dans des volumes Docker, donc
+    # difficiles a atteindre) vers Documents/Sauvegardes Radthal, au nom de la personne qui a lance la commande.
+    find_docker
+    [ -n "$DOCKER" ] || { echo "Docker introuvable" >&2; exit 1; }
+    uid="${PKEXEC_UID:-${SUDO_UID:-}}"
+    [ -n "$uid" ] || { echo "utilisateur inconnu (lance cette commande avec pkexec ou sudo)" >&2; exit 1; }
+    home="$(getent passwd "$uid" | cut -d: -f6)"
+    [ -d "$home" ] || { echo "dossier personnel introuvable" >&2; exit 1; }
+    dest="$home/Documents/Sauvegardes Radthal"
+    mkdir -p "$dest" || exit 1
+    n=0
+    for vol_pat in "${PROJECT}_radthal-data:sauvegarde*.dat" "${PROJECT}_radthal-ui:*.json"; do
+        vol="${vol_pat%%:*}"; pat="${vol_pat#*:}"
+        mp="$("$DOCKER" volume inspect "$vol" --format '{{ .Mountpoint }}' 2>/dev/null)" || continue
+        [ -d "$mp" ] || continue
+        for f in "$mp"/$pat; do
+            [ -f "$f" ] || continue
+            cp -p "$f" "$dest/" && n=$((n + 1))
+        done
+    done
+    chown -R "$uid" "$dest" 2>/dev/null || true
+    chmod 700 "$dest"
+    echo "$n fichier(s) copie(s) dans $dest"
+}
+
+case "${1:-}" in
+    export-backups) cmd_export_backups ;;
+    up) cmd_up ;;
+    down) cmd_down ;;
+    start) systemctl start --no-block radthal.service ;;
+    stop) systemctl stop radthal.service ;;
+    restart) systemctl restart --no-block radthal.service ;;
+    install-docker) cmd_install_docker ;;
+    *) echo "usage : radthal-stack up|down|start|stop|restart|install-docker|export-backups" >&2; exit 2 ;;
+esac

@@ -1,0 +1,43 @@
+# Construit le paquet Ubuntu (.deb) : disponible dans l'onglet Actions (artefact), et joint a la version quand on pousse une etiquette "v1.2.3".
+name: Paquet Ubuntu
+
+on:
+  push:
+    branches: [main, appli-un-clic]
+    tags: ["v*"]
+    paths:
+      - packaging/ubuntu/**
+      - interface/**
+      - docker-compose.yml
+      - Dockerfile
+      - radthal.patch
+      - docs/logo-radthal.png
+      - .github/workflows/deb.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deb:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y python3-yaml python3-pil
+      - name: Tests de l'application
+        run: python3 packaging/ubuntu/test_radthal_app.py
+      - name: Construire le paquet
+        run: bash packaging/ubuntu/build-deb.sh
+      - name: Verifier le paquet
+        run: |
+          dpkg-deb -I dist/*.deb
+          dpkg-deb -c dist/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: radthal-deb
+          path: dist/*.deb
+      - name: Joindre a la version
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" dist/*.deb --clobber || gh release create "${GITHUB_REF_NAME}" dist/*.deb --generate-notes

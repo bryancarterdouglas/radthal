@@ -4,3 +4,4 @@ __pycache__/
 # Ne jamais envoyer sur GitHub : configuration locale et sauvegardes de portefeuille
 .env
 *.dat
+dist/

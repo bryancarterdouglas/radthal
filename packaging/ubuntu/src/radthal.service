@@ -1,0 +1,17 @@
+[Unit]
+Description=Noeud Radthal (Docker)
+Documentation=https://github.com/bryancarterdouglas/radthal
+After=network-online.target docker.service snap.docker.dockerd.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# La premiere fois, telecharger (ou compiler) les images peut durer longtemps : pas de delai maximum.
+TimeoutStartSec=0
+TimeoutStopSec=120
+ExecStart=/usr/lib/radthal/radthal-stack up
+ExecStop=/usr/lib/radthal/radthal-stack down
+
+[Install]
+WantedBy=multi-user.target

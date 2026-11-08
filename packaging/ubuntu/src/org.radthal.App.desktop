@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Radthal
+GenericName=Nœud Radthal
+Comment=Ton nœud Radthal : blocs, portefeuille, horodatage
+Comment[en]=Your Radthal node: blocks, wallet, timestamping
+Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 /usr/bin/radthal-app
+Icon=radthal
+Terminal=false
+Categories=Network;Finance;
+Keywords=radthal;bitcoin;noeud;node;portefeuille;wallet;
+StartupWMClass=org.radthal.App
+StartupNotify=true

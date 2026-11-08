@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+if [ "$1" = "configure" ]; then
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload || true
+        systemctl enable radthal.service || true
+        if [ -n "${2:-}" ]; then
+            systemctl restart --no-block radthal.service || true     # mise a jour : on applique la nouvelle version
+        else
+            systemctl start --no-block radthal.service || true       # premiere installation : le noeud demarre tout de suite
+        fi
+    fi
+    command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
+fi
+exit 0

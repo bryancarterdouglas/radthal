@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+# Desinstaller arrete le noeud mais ne supprime jamais tes donnees (chaine, portefeuille) : elles restent dans
+# le volume Docker "radthal_radthal-data".
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+    if [ -d /run/systemd/system ]; then
+        systemctl stop radthal.service || true
+        systemctl disable radthal.service || true
+    fi
+fi
+exit 0
