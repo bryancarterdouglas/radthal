@@ -59,6 +59,8 @@ def peer_addr(a):
     a = str(a or "")
     if SHOW_PEER_ADDR or not a:
         return a
+    if a.startswith("127.") or a.startswith("[::1]"):
+        return "cet appareil"                  # un programme de ta machine (mineur, page web...)
     m = re.fullmatch(r"(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}(?::\d+)?", a)
     if m:
         return "%s.%s.x.x" % m.groups()
