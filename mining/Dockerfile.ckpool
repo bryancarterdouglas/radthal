@@ -4,6 +4,12 @@
 # minimum, comme l'exige la regle du reseau a partir du bloc 25 000 (voir README, "La part du developpeur").
 # La commande grep fait echouer la compilation si le code de ckpool a change et que la modification ne s'applique plus.
 #
+# Compatibilite : par defaut, ckpool se compile pour le processeur de la machine qui le compile (option -march=native et lecture
+# de /proc/cpuinfo). L'image construite sur GitHub ne tournait alors que sur des processeurs recents ("instruction illegale",
+# code de sortie 132, sur un PC sans AVX-512). On compile donc ici pour un processeur x86-64 de base : le calcul SHA-256 passe
+# par le code C standard de ckpool, un peu moins rapide mais sans effet sur un minage solo. La derniere commande verifie
+# qu'aucune instruction avancee n'est restee dans le programme.
+#
 #   docker build -t ckpool -f mining/Dockerfile.ckpool mining
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,7 +19,11 @@ WORKDIR /ckpool
 RUN git clone --depth 1 https://bitbucket.org/ckolivas/ckpool.git . \
  && sed -i 's|ckpool.donaddress = "bc1q28kkr5hk4gnqe3evma6runjrd2pvqyp8fpwfzu";|ckpool.donaddress = "rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6"; if (ckpool.donation < 2.0) ckpool.donation = 2.0;|' src/ckpool.c \
  && grep -q 'ckpool.donaddress = "rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6"; if (ckpool.donation < 2.0)' src/ckpool.c \
- && ./autogen.sh && ./configure && make -j2
+ && sed -i 's|cpuinfo=\$(cat /proc/cpuinfo 2>/dev/null)|cpuinfo=|' configure.ac \
+ && ! grep -q 'cpuinfo=\$(cat' configure.ac \
+ && grep -q 'cpuinfo=$' configure.ac \
+ && ./autogen.sh && ./configure CFLAGS="-g -O2 -Wall" CXXFLAGS="-g -O2 -Wall" && make -j2 \
+ && if [ "$(uname -m)" = "x86_64" ]; then ! objdump -d src/ckpool | grep -q -E 'zmm|ymm|sha256rnds2|sha256msg|vpternlog|kmov'; fi
 # Script de lancement de l'application Umbrel "Radthal" (ckpool-app-entry.sh) : sans effet pour les autres usages de l'image.
 COPY ckpool-app-entry.sh /usr/local/bin/ckpool-app-entry
 RUN chmod 755 /usr/local/bin/ckpool-app-entry
