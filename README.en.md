@@ -92,9 +92,21 @@ minutes, nothing to compile). Tested on a recent Ubuntu release; other distribut
 Docker volume `radthal_radthal-data`, the same one the installation below uses: if you already ran the node with `git clone`, stop it
 first (`cd radthal && sudo docker compose down`, **without** `-v`). Details in [`packaging/ubuntu`](packaging/ubuntu/README.md).
 
+This is the application on Ubuntu (real screenshots of a PC with a brand-new node: zero balance, wallet address and QR code blurred).
+
+| Node | Dashboard | Mempool |
+|:---:|:---:|:---:|
+| <a href="docs/ubuntu-noeud.jpg"><img src="docs/ubuntu-noeud.jpg" width="260" alt="Radthal on Ubuntu: node page (sync, connections, ports)"></a> | <a href="docs/ubuntu-tableau-de-bord.jpg"><img src="docs/ubuntu-tableau-de-bord.jpg" width="260" alt="Radthal on Ubuntu: dashboard (latest blocks, fork monitoring, difficulty)"></a> | <a href="docs/ubuntu-mempool.jpg"><img src="docs/ubuntu-mempool.jpg" width="260" alt="Radthal on Ubuntu: mempool page (pending transactions)"></a> |
+| **ckpool** | **Wallet** | **Timestamping** |
+| <a href="docs/ubuntu-ckpool.jpg"><img src="docs/ubuntu-ckpool.jpg" width="260" alt="Radthal on Ubuntu: ckpool page (my miner, hashrate, accepted shares)"></a> | <a href="docs/ubuntu-portefeuille.jpg"><img src="docs/ubuntu-portefeuille.jpg" width="260" alt="Radthal on Ubuntu: wallet (receiving address and QR code blurred)"></a> | <a href="docs/ubuntu-horodatage.jpg"><img src="docs/ubuntu-horodatage.jpg" width="260" alt="Radthal on Ubuntu: timestamping a document"></a> |
+
+(Click an image to enlarge it.)
+
 ## Umbrel: one-click install
 
 On an Umbrel (a Raspberry Pi, for example), add the app store `https://github.com/bryancarterdouglas/umbrel-radthal` (App Store, the three dots, *Community App Stores*), then install **Radthal**. The app runs the node, the ckpool mining server and all the pages, with nothing to compile. What was tested, mining and reusing an existing wallet are explained in the [Umbrel-radthal](https://github.com/bryancarterdouglas/umbrel-radthal) repository.
+
+<p align="center"><a href="docs/umbrel-accueil.jpg"><img src="docs/umbrel-accueil.jpg" width="520" alt="Umbrel home screen with the Radthal app"></a><br><sub>The <b>Radthal</b> app on the Umbrel home screen.</sub></p>
 
 Not on Ubuntu or Umbrel, or you prefer to see everything? Carry on with the installation below.
 

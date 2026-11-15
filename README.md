@@ -93,9 +93,21 @@ portefeuille) sont dans le volume Docker `radthal_radthal-data`, le même que po
 nœud avec `git clone`, arrête-le d'abord (`cd radthal && sudo docker compose down`, **sans** `-v`). Détails dans
 [`packaging/ubuntu`](packaging/ubuntu/README.md).
 
+Voici l'application sur Ubuntu (captures réelles d'un PC avec un nœud tout neuf : solde à zéro, adresse et QR code du portefeuille floutés).
+
+| Nœud | Tableau de bord | Mempool |
+|:---:|:---:|:---:|
+| <a href="docs/ubuntu-noeud.jpg"><img src="docs/ubuntu-noeud.jpg" width="260" alt="Radthal sous Ubuntu : page du nœud (synchronisation, connexions, ports)"></a> | <a href="docs/ubuntu-tableau-de-bord.jpg"><img src="docs/ubuntu-tableau-de-bord.jpg" width="260" alt="Radthal sous Ubuntu : tableau de bord (derniers blocs, surveillance des forks, difficulté)"></a> | <a href="docs/ubuntu-mempool.jpg"><img src="docs/ubuntu-mempool.jpg" width="260" alt="Radthal sous Ubuntu : page mempool (transactions en attente)"></a> |
+| **ckpool** | **Portefeuille** | **Horodatage** |
+| <a href="docs/ubuntu-ckpool.jpg"><img src="docs/ubuntu-ckpool.jpg" width="260" alt="Radthal sous Ubuntu : page ckpool (mon mineur, hashrate, parts acceptées)"></a> | <a href="docs/ubuntu-portefeuille.jpg"><img src="docs/ubuntu-portefeuille.jpg" width="260" alt="Radthal sous Ubuntu : portefeuille (adresse de réception et QR code floutés)"></a> | <a href="docs/ubuntu-horodatage.jpg"><img src="docs/ubuntu-horodatage.jpg" width="260" alt="Radthal sous Ubuntu : horodatage d'un document"></a> |
+
+(Clique sur une image pour l'agrandir.)
+
 ## Umbrel : installation en un clic
 
 Sur un Umbrel (un Raspberry Pi par exemple), ajoute la boutique d'applications `https://github.com/bryancarterdouglas/umbrel-radthal` (App Store, les trois points, *Community App Stores*), puis installe **Radthal**. L'application lance le nœud, le serveur de minage ckpool et toutes les pages, sans rien compiler. Ce qui a été testé, le minage et la reprise d'un portefeuille existant sont expliqués dans le dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/umbrel-radthal).
+
+<p align="center"><a href="docs/umbrel-accueil.jpg"><img src="docs/umbrel-accueil.jpg" width="520" alt="Écran d'accueil d'Umbrel avec l'application Radthal"></a><br><sub>L'application <b>Radthal</b> sur l'écran d'accueil d'Umbrel.</sub></p>
 
 Pas sur Ubuntu ni sur Umbrel, ou tu préfères tout voir ? Continue avec l'installation ci-dessous.
 
