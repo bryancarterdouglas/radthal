@@ -93,7 +93,7 @@ nœud avec `git clone`, arrête-le d'abord (`cd radthal && sudo docker compose d
 
 ## Umbrel : installation en un clic
 
-Sur un Umbrel (un Raspberry Pi par exemple), ajoute la boutique d'applications `https://github.com/bryancarterdouglas/Umbrel-radthal` (App Store, les trois points, *Community App Stores*), puis installe **Radthal**. L'application lance le nœud, le serveur de minage ckpool et toutes les pages, sans rien compiler. Ce qui a été testé, le minage et la reprise d'un portefeuille existant sont expliqués dans le dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal).
+Sur un Umbrel (un Raspberry Pi par exemple), ajoute la boutique d'applications `https://github.com/bryancarterdouglas/umbrel-radthal` (App Store, les trois points, *Community App Stores*), puis installe **Radthal**. L'application lance le nœud, le serveur de minage ckpool et toutes les pages, sans rien compiler. Ce qui a été testé, le minage et la reprise d'un portefeuille existant sont expliqués dans le dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/umbrel-radthal).
 
 Pas sur Ubuntu ni sur Umbrel, ou tu préfères tout voir ? Continue avec l'installation ci-dessous.
 
@@ -269,7 +269,7 @@ difficile à réécrire. Le guide pas à pas (nœud + serveur de minage `ckpool`
 
 Pour suivre et utiliser son nœud sans ligne de commande, Radthal a de petites pages web. Avec l'installation Docker de ce guide, elles
 démarrent en même temps que le nœud : il n'y a rien de plus à installer (Python, aucune bibliothèque). Sur Umbrel, c'est l'application **Radthal**
-du dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal), en un clic.
+du dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/umbrel-radthal), en un clic.
 
 | Page | Adresse (sur ce PC) |
 |---|---|
@@ -329,7 +329,7 @@ une sauvegarde (voir [Créer un portefeuille](#créer-un-portefeuille)).
 
 Les pages sont en HTTP : ne les expose jamais sur Internet. Le code des pages est dans le dossier [`interface/`](interface/) ; l'application
 Umbrel (et les anciennes applications séparées, faites pour le Raspberry Pi de l'auteur) est dans le dépôt
-**[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**.
+**[Umbrel-radthal](https://github.com/bryancarterdouglas/umbrel-radthal)**.
 
 ## Nœuds connus
 
