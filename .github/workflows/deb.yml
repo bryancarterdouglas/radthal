@@ -28,6 +28,8 @@ jobs:
         run: python3 packaging/ubuntu/test_radthal_app.py
       - name: Tests du menu commun des pages
         run: python3 interface/test_hub.py
+      - name: Tests de la preparation des dossiers (application Umbrel)
+        run: python3 interface/test_init.py
       - name: Construire le paquet
         run: bash packaging/ubuntu/build-deb.sh
       - name: Verifier le paquet

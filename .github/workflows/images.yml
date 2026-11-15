@@ -3,6 +3,7 @@
 #
 #   ghcr.io/bryancarterdouglas/radthal             le noeud (amd64 = PC, arm64 = Raspberry Pi)
 #   ghcr.io/bryancarterdouglas/radthal-interface   les pages web
+#   ghcr.io/bryancarterdouglas/radthal-ckpool      ckpool, le serveur de minage (recette : mining/Dockerfile.ckpool)
 #
 # Declenchement : a chaque changement du noeud ou des pages sur main (etiquette "latest"), sur une version "v1.2.3", ou a la main (onglet Actions).
 name: Images Docker
@@ -15,6 +16,7 @@ on:
       - Dockerfile
       - radthal.patch
       - interface/**
+      - mining/**
       - .github/workflows/images.yml
   workflow_dispatch:
 
@@ -30,6 +32,7 @@ concurrency:
 env:
   NODE_IMAGE: ghcr.io/bryancarterdouglas/radthal
   UI_IMAGE: ghcr.io/bryancarterdouglas/radthal-interface
+  CKPOOL_IMAGE: ghcr.io/bryancarterdouglas/radthal-ckpool
 
 jobs:
   # Le noeud est compile sur une machine de chaque architecture (pas d'emulation : ce serait des heures).
@@ -126,6 +129,35 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ./interface
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ckpool : petit programme en C, compile pour les deux architectures (la compilation sous emulation reste courte).
+  ckpool:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.CKPOOL_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./mining
+          file: ./mining/Dockerfile.ckpool
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
