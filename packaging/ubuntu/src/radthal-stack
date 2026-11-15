@@ -26,9 +26,10 @@ load_config() {
     if [ -f "$ETC/radthal.env" ]; then
         set -a; . "$ETC/radthal.env"; set +a
     fi
-    NODE_IMAGE="ghcr.io/bryancarterdouglas/radthal:${RADTHAL_TAG:-latest}"
-    UI_IMAGE="ghcr.io/bryancarterdouglas/radthal-interface:${RADTHAL_TAG:-latest}"
-    export NODE_IMAGE UI_IMAGE
+    NODE_IMAGE="ghcr.io/bryancarterdouglas/radthal:${NODE_TAG:-${RADTHAL_TAG:-latest}}"
+    UI_IMAGE="ghcr.io/bryancarterdouglas/radthal-interface:${UI_TAG:-${RADTHAL_TAG:-latest}}"
+    CKPOOL_IMAGE="ghcr.io/bryancarterdouglas/radthal-ckpool:${CKPOOL_TAG:-${RADTHAL_TAG:-latest}}"
+    export NODE_IMAGE UI_IMAGE CKPOOL_IMAGE
 }
 
 find_docker() { DOCKER="$(command -v docker || true)"; }
@@ -48,6 +49,51 @@ ensure_image() {    # ensure_image <image> <dossier de construction>
     fi
     status building "Compilation sur cet ordinateur de $1 (10 a 60 minutes la premiere fois)"
     tar -C "$2" -cf - . | "$DOCKER" build -t "$1" -
+}
+
+ensure_image_optional() {    # comme ensure_image, mais sans compilation : vrai si l'image est la (telechargee ou deja presente)
+    status pulling "$1"
+    if "$DOCKER" pull "$1"; then
+        return 0
+    fi
+    "$DOCKER" image inspect "$1" >/dev/null 2>&1
+}
+
+stratum_port_free() {    # vrai si le port 3333 (mineurs) est libre ou deja tenu par NOTRE noeud (relance apres une coupure)
+    local cid
+    cid="$(compose ps -q radthal 2>/dev/null | head -n 1)"
+    if [ -n "$cid" ] && "$DOCKER" port "$cid" 3333/tcp >/dev/null 2>&1; then
+        return 0
+    fi
+    command -v ss >/dev/null 2>&1 || return 0
+    ! ss -H -ltn "sport = :3333" 2>/dev/null | grep -q .
+}
+
+lan_ip() {               # adresse de cet ordinateur sur le reseau local : celle a donner a un mineur
+    local addr
+    addr="$(ip -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9][0-9.]*\).*/\1/p' | head -n 1)"
+    [ -n "$addr" ] || addr="$(hostname -I 2>/dev/null | awk '{print $1}')"
+    printf '%s' "$addr"
+}
+
+prepare_mining() {       # decide si ckpool demarre ; exporte les variables lues par le fichier docker-compose.yml
+    MINING=1
+    MINING_NOTE=""
+    if ! ensure_image_optional "$CKPOOL_IMAGE"; then
+        MINING=0
+        MINING_NOTE="Le minage est désactivé : l'image de ckpool n'a pas pu être téléchargée. Relance Radthal quand l'ordinateur est en ligne."
+    elif ! stratum_port_free; then
+        MINING=0
+        MINING_NOTE="Le minage est désactivé : le port 3333 est déjà utilisé sur cet ordinateur (un autre ckpool ?). Arrête-le, puis relance Radthal."
+    fi
+    if [ "$MINING" = 0 ]; then
+        echo "[radthal] $MINING_NOTE"
+        STRATUM_BIND=127.0.0.1      # le noeud publie alors le port sur un numero libre choisi par Docker, jamais sur le reseau
+        STRATUM_HOST_PORT=
+    elif [ -z "${STRATUM_HOST:-}" ]; then
+        STRATUM_HOST="$(lan_ip)"
+    fi
+    export STRATUM_BIND STRATUM_HOST_PORT STRATUM_HOST MINING_NOTE
 }
 
 cmd_up() {
@@ -74,8 +120,16 @@ cmd_up() {
     fi
     ensure_image "$NODE_IMAGE" "$SHARE/build/node" || { status error "Impossible d'obtenir l'image du noeud"; exit 1; }
     ensure_image "$UI_IMAGE" "$SHARE/build/interface" || { status error "Impossible d'obtenir l'image des pages"; exit 1; }
+    prepare_mining
     status starting "Demarrage du noeud"
-    if ! compose up -d --remove-orphans; then
+    up_failed=0
+    if [ "$MINING" = 1 ]; then
+        compose up -d --remove-orphans || up_failed=1
+    else
+        compose stop ckpool >/dev/null 2>&1 || true
+        compose up -d --remove-orphans init radthal interface || up_failed=1
+    fi
+    if [ "$up_failed" = 1 ]; then
         status error "Docker n'a pas pu demarrer le noeud (voir le journal)"
         exit 1
     fi

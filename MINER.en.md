@@ -9,6 +9,8 @@ share" in the [README](README.en.md#the-developer-share-2)). `ckpool` handles th
 
 The more honest miners there are, the harder the chain is to rewrite: mining really helps the network.
 
+> **With the Ubuntu app (`.deb` package) or the Umbrel app, ckpool is already included**: none of what follows is needed, just point the miner at port 3333 (the ckpool page shows the settings). This guide is for people who set everything up by hand.
+
 > This recipe is the project creator's own (Linux, Docker, node and ckpool on the same machine, in "host network" mode).
 > It replaces the `docker compose` installation of the README: do not run both on the same machine, they use the same port 9333.
 

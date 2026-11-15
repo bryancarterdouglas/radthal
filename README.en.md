@@ -85,7 +85,7 @@ and a service that runs the node in the background, including at boot.
 2. In a terminal: `cd ~/Downloads && sudo apt install ./radthal_*_all.deb`
 3. Open **Radthal** from the applications menu.
 
-This application runs the node and its pages (Node, Dashboard, Mempool, Wallet, Timestamping). The **ckpool** mining server is not part of it yet: to mine, follow **[MINER.en.md](MINER.en.md)** or use the Umbrel app.
+This application runs the node, the **ckpool** mining server and the pages (Node, Dashboard, Mempool, ckpool, Wallet, Timestamping). To mine, point a SHA-256 miner (Avalon, Antminer, Bitaxe...) at port **3333** of the computer, with your `rdt1...` address (Wallet page) as the user name: the **ckpool** page shows the settings. This port is meant for your local network only: never forward it from your router. If port 3333 is already taken (a `ckpool` started by hand, for example), mining switches itself off and the ckpool page says so: stop the other one, then restart Radthal.
 
 Docker is required: if it is missing, the application offers to install it. The first start downloads the ready-made node (a few
 minutes, nothing to compile). Tested on a recent Ubuntu release; other distributions are untested. Your data (chain, wallet) lives in the

@@ -29,6 +29,7 @@ PAGES = [                    # (cle, nom affiche, port) : les ports sont ceux de
     ("node", "Nœud", 3777),
     ("dashboard", "Tableau de bord", 3778),
     ("mempool", "Mempool", 3779),
+    ("ckpool", "ckpool", 3780),
     ("wallet", "Portefeuille", 3781),
     ("stamp", "Horodatage", 3782),
 ]

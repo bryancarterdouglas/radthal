@@ -10,6 +10,8 @@ tout seul de ce partage.
 
 Plus il y a de mineurs honnêtes, plus la chaîne est difficile à réécrire : miner aide vraiment le réseau.
 
+> **Avec l'application Ubuntu (paquet `.deb`) ou l'application Umbrel, ckpool est déjà inclus** : rien de ce qui suit n'est à faire, il suffit de brancher le mineur sur le port 3333 (la page ckpool donne les réglages). Ce guide sert à ceux qui montent tout à la main.
+
 > Cette recette est celle du créateur du projet (Linux, Docker, nœud et ckpool sur la même machine, en « réseau hôte »).
 > Elle remplace l'installation `docker compose` du README : ne lance pas les deux sur la même machine, ils utilisent
 > le même port 9333.

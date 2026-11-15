@@ -85,7 +85,7 @@ sans navigateur) et un service qui fait tourner le nœud en arrière-plan, y com
 2. Dans un terminal : `cd ~/Téléchargements && sudo apt install ./radthal_*_all.deb`
 3. Ouvre **Radthal** dans le menu des applications.
 
-Cette application lance le nœud et ses pages (Nœud, Tableau de bord, Mempool, Portefeuille, Horodatage). Le serveur de minage **ckpool** n'en fait pas encore partie : pour miner, suis **[MINER.md](MINER.md)** ou utilise l'application Umbrel.
+Cette application lance le nœud, le serveur de minage **ckpool** et les pages (Nœud, Tableau de bord, Mempool, ckpool, Portefeuille, Horodatage). Pour miner, branche un mineur SHA-256 (Avalon, Antminer, Bitaxe…) sur le port **3333** de l'ordinateur, avec ton adresse `rdt1…` (page Portefeuille) comme nom d'utilisateur : la page **ckpool** donne les réglages. Ce port sert uniquement à ton réseau local : ne le redirige jamais depuis ta box. Si le port 3333 est déjà pris (un autre ckpool lancé à la main, par exemple), le minage se désactive tout seul et la page ckpool l'explique : arrête l'autre, puis relance Radthal.
 
 Docker est nécessaire : s'il manque, l'application propose de l'installer. Le premier démarrage télécharge le nœud tout fait (quelques
 minutes, sans rien compiler). Testé sur une version récente d'Ubuntu ; les autres distributions ne sont pas testées. Tes données (chaîne,

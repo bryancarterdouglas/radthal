@@ -85,6 +85,8 @@ LOGS = os.environ.get("LOGS", "/ckpool/logs")
 PORT = int(os.environ.get("PORT", "8000"))
 WALLET = os.environ.get("WALLET", "minage")
 STRATUM = os.environ.get("STRATUM_PORT", "3333")
+STRATUM_HOST = os.environ.get("STRATUM_HOST", "").strip()   # adresse a donner au mineur ; vide = celle de la barre d'adresse du navigateur
+MINING_NOTE = os.environ.get("MINING_NOTE", "").strip()   # vide, sauf si le minage est desactive (raison affichee)
 TITLES = {"node": "Nœud Radthal", "dashboard": "Tableau de bord Radthal",
           "mempool": "Mempool Radthal", "ckpool": "ckpool Radthal", "stamp": "Horodatage Radthal"}
 SUBTITLES = {"node": "L'état de ton nœud complet",
@@ -654,10 +656,10 @@ def view_ckpool():
                       "Aucun mineur actif ces dernières 24 h. Branche ton ASIC avec les réglages ci-dessous."))
 
     secs.append({"id": "connect", "type": "connect", "title": "Connecter un mineur", "items": [
-        {"label": "URL du pool", "value": "stratum+tcp://{host}:" + STRATUM, "copy": True},
+        {"label": "URL du pool", "value": "stratum+tcp://" + (STRATUM_HOST or "{host}") + ":" + STRATUM, "copy": True},
         {"label": "Utilisateur", "value": "ton adresse rdt1… (ajoute .nom pour nommer l'appareil)", "copy": False},
         {"label": "Mot de passe", "value": "x", "copy": True}],
-        "warn": "Le port %s sert uniquement à ton réseau local. Ne l'ouvre jamais sur Internet." % STRATUM})
+        "warn": MINING_NOTE or "Le port %s sert uniquement à ton réseau local. Ne l'ouvre jamais sur Internet." % STRATUM})
 
     if mine:
         top = sorted(mine.values(), key=lambda t: t.get("confirmations") or 0)[:8]
