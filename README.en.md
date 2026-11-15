@@ -18,7 +18,7 @@ network.
 
 On Bitcoin, a home miner has practically no chance of finding a block solo: the network is millions of times more powerful. Radthal
 reuses the same rules on a new, tiny chain where **a single home miner still matters** and where everything can be observed up
-close: a full node on a Raspberry Pi, a mining server, a wallet, alerts. It is a playground for experimenting and learning, **not an
+close: a full node on a Linux computer or a Raspberry Pi, a mining server, a wallet, alerts. It is a playground for experimenting and learning, **not an
 investment**.
 
 To understand the idea in pictures, see the [presentation video](https://youtu.be/20HJ0tP18fI) (in French, computer-generated voice).
@@ -78,7 +78,7 @@ share is taken out of the reward, nothing is added.
 
 ## Ubuntu: one-click install
 
-On Ubuntu, the simplest way is the **`.deb`** package: it installs the **Radthal** application (a menu icon, its own window, no browser)
+On an Ubuntu computer, the simplest way is the **`.deb`** package (an ordinary PC is enough, no Raspberry Pi needed): it installs the **Radthal** application (a menu icon, its own window, no browser)
 and a service that runs the node in the background, including at boot.
 
 1. Download the `radthal_….deb` file from the [releases page](https://github.com/bryancarterdouglas/radthal/releases/latest).

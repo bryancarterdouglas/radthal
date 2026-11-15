@@ -18,7 +18,7 @@ bloc 25 000. Ce dépôt permet à **n'importe qui de faire tourner un nœud comp
 
 Sur Bitcoin, un mineur de salon n'a pratiquement aucune chance de trouver un bloc en solo : le réseau est des millions de fois plus
 puissant que lui. Radthal reprend les mêmes règles sur une chaîne neuve et minuscule, où **un seul mineur domestique compte encore** et où
-l'on peut tout observer de près : un nœud complet sur un Raspberry Pi, un serveur de minage, un portefeuille, des alertes. C'est un
+l'on peut tout observer de près : un nœud complet sur un ordinateur Linux ou un Raspberry Pi, un serveur de minage, un portefeuille, des alertes. C'est un
 terrain d'expérience et d'apprentissage, pas un placement.
 
 Pour comprendre le principe en images : la [vidéo de présentation](https://youtu.be/20HJ0tP18fI) (voix générée par ordinateur).
@@ -78,7 +78,7 @@ la part est prélevée sur la récompense, rien n'est ajouté.
 
 ## Ubuntu : installation en un clic
 
-Sur Ubuntu, le plus simple est le paquet **`.deb`** : il installe l'application **Radthal** (une icône dans le menu, sa propre fenêtre,
+Sur un ordinateur Ubuntu, le plus simple est le paquet **`.deb`** (un simple PC suffit, pas besoin de Raspberry Pi) : il installe l'application **Radthal** (une icône dans le menu, sa propre fenêtre,
 sans navigateur) et un service qui fait tourner le nœud en arrière-plan, y compris au démarrage de l'ordinateur.
 
 1. Télécharge le fichier `radthal_….deb` sur la [page des versions](https://github.com/bryancarterdouglas/radthal/releases/latest).
