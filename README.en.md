@@ -45,7 +45,7 @@ What to know before getting interested:
 | Genesis hash | `00000000abe4c97c4b0efb25e556acfe8d76ffb08d2bbbe5bc5694f90459c198` |
 | Genesis merkle root | `2ee4c2f3be7d69f29ad3245f440a3af80cb3a290b6c2390b84ae82b680ab0c1e` |
 | Consensus differences | BIP34 active from block 17; SegWit and Taproot active from the start; no preconfigured "minimum work" or trusted block; **2% developer share from block 25,000** |
-| Developer share | from block **25,000**: 2% of each block's reward goes to `rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6` (see [The developer share](#the-developer-share-2)) |
+| Developer share | from block **25,000**: 2% of each block's reward goes to the creator's address, written in the code (see [The developer share](#the-developer-share-2)) |
 | Checkpoint | block **20,300**, hash `000000000000011f952520848001cef3f59c00afe6539290469827aefc1e77c3` (see [Protection against rewriting](#protection-against-rewriting-checkpoint)) |
 
 The `radthal.patch` file is authoritative: it contains every change relative to Bitcoin Core v31.1.
@@ -59,12 +59,12 @@ share is taken out of the reward, nothing is added.
 | | |
 |---|---|
 | Starts | block **25,000** (earlier blocks are unchanged) |
-| Address | `rdt1qslzd9g3s34r7kc2pmhhvlv3uds37ddvvd5zuz6` |
+| Address | the creator's, written in the code (function `GetDevFeeScript` in `radthal.patch`) |
 | Amount | at least 2% of the block reward (excluding transaction fees) |
 
 - **It is public and verifiable.** The rule is in `radthal.patch` (functions `GetDevFeeAmount` and `GetDevFeeScript`): from block
   25,000 on, a block whose first transaction (the "coinbase") does not pay this share is rejected by up-to-date nodes (error
-  `bad-cb-devfee`). Every affected block therefore contains an output to this address, visible in the block explorer.
+  `bad-cb-devfee`). Every affected block therefore contains an output to the creator's address, visible in the block explorer.
 - **Update your node before block 25,000** (`git pull && sudo docker compose up -d --build`, or the recipe in [MINER.en.md](MINER.en.md)).
   A node that is not up to date also accepts blocks without this share, which up-to-date nodes reject: it would end up on a
   different chain from the rest of the network.
