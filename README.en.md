@@ -90,7 +90,11 @@ minutes, nothing to compile). Tested on a recent Ubuntu release; other distribut
 Docker volume `radthal_radthal-data`, the same one the installation below uses: if you already ran the node with `git clone`, stop it
 first (`cd radthal && sudo docker compose down`, **without** `-v`). Details in [`packaging/ubuntu`](packaging/ubuntu/README.md).
 
-Not on Ubuntu, or you prefer to see everything? Carry on with the installation below.
+## Umbrel: one-click install
+
+On an Umbrel (a Raspberry Pi, for example), add the app store `https://github.com/bryancarterdouglas/Umbrel-radthal` (App Store, the three dots, *Community App Stores*), then install **Radthal**. The app runs the node, the ckpool mining server and all the pages, with nothing to compile. What was tested, mining and reusing an existing wallet are explained in the [Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal) repository.
+
+Not on Ubuntu or Umbrel, or you prefer to see everything? Carry on with the installation below.
 
 ## What you need
 
@@ -262,8 +266,8 @@ rewrite. The step-by-step guide (node + `ckpool` mining server) is in **[MINER.e
 ## The interface (optional)
 
 To follow and use your node without the command line, Radthal has small web pages. With the Docker install in this guide they start
-together with the node: nothing more to install (Python, no libraries). On Umbrel they are the apps of the
-[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal) repository.
+together with the node: nothing more to install (Python, no libraries). On Umbrel, it is the **Radthal** app of the
+[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal) repository, in one click.
 
 | Page | Address (on this PC) |
 |---|---|
@@ -321,7 +325,7 @@ link, image or code). Photos and videos do not fit: only a small amount of text 
 [Create a wallet](#create-a-wallet)).
 
 The pages are plain HTTP: never expose them to the Internet. The pages' code is in the [`interface/`](interface/) folder; the Umbrel
-apps (which use files from the author's Raspberry Pi) are in the **[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**
+app (and the older separate apps, made for the author's Raspberry Pi) is in the **[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**
 repository.
 
 ## Known nodes

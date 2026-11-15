@@ -91,7 +91,11 @@ portefeuille) sont dans le volume Docker `radthal_radthal-data`, le même que po
 nœud avec `git clone`, arrête-le d'abord (`cd radthal && sudo docker compose down`, **sans** `-v`). Détails dans
 [`packaging/ubuntu`](packaging/ubuntu/README.md).
 
-Pas sur Ubuntu, ou tu préfères tout voir ? Continue avec l'installation ci-dessous.
+## Umbrel : installation en un clic
+
+Sur un Umbrel (un Raspberry Pi par exemple), ajoute la boutique d'applications `https://github.com/bryancarterdouglas/Umbrel-radthal` (App Store, les trois points, *Community App Stores*), puis installe **Radthal**. L'application lance le nœud, le serveur de minage ckpool et toutes les pages, sans rien compiler. Ce qui a été testé, le minage et la reprise d'un portefeuille existant sont expliqués dans le dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal).
+
+Pas sur Ubuntu ni sur Umbrel, ou tu préfères tout voir ? Continue avec l'installation ci-dessous.
 
 ## Ce qu'il te faut
 
@@ -264,8 +268,8 @@ difficile à réécrire. Le guide pas à pas (nœud + serveur de minage `ckpool`
 ## L'interface (facultatif)
 
 Pour suivre et utiliser son nœud sans ligne de commande, Radthal a de petites pages web. Avec l'installation Docker de ce guide, elles
-démarrent en même temps que le nœud : il n'y a rien de plus à installer (Python, aucune bibliothèque). Sur Umbrel, ce sont les applications
-du dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal).
+démarrent en même temps que le nœud : il n'y a rien de plus à installer (Python, aucune bibliothèque). Sur Umbrel, c'est l'application **Radthal**
+du dépôt [Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal), en un clic.
 
 | Page | Adresse (sur ce PC) |
 |---|---|
@@ -323,8 +327,8 @@ quantité de texte peut être écrite.
 (nom par défaut `monportefeuille`, changeable avec `WALLET_NAME` dans `.env`). Pense ensuite à le protéger par un mot de passe, puis à faire
 une sauvegarde (voir [Créer un portefeuille](#créer-un-portefeuille)).
 
-Les pages sont en HTTP : ne les expose jamais sur Internet. Le code des pages est dans le dossier [`interface/`](interface/) ; les
-applications Umbrel (qui utilisent des fichiers du Raspberry Pi de l'auteur) sont dans le dépôt
+Les pages sont en HTTP : ne les expose jamais sur Internet. Le code des pages est dans le dossier [`interface/`](interface/) ; l'application
+Umbrel (et les anciennes applications séparées, faites pour le Raspberry Pi de l'auteur) est dans le dépôt
 **[Umbrel-radthal](https://github.com/bryancarterdouglas/Umbrel-radthal)**.
 
 ## Nœuds connus
@@ -386,7 +390,7 @@ section "La part du développeur"; update your node before block 25,000). This r
 `cp env.example .env`, set `SEED_NODE` to a running node, then `sudo docker compose up -d --build`.
 On Bitcoin, a home miner has practically no chance of finding a block solo; on this tiny new chain a single home miner still matters
 (for as long as few people mine), which makes it a hands-on learning playground, not an investment.
-Optional Umbrel web pages (author's own Raspberry Pi setup, not one-click): node, dashboard, mempool and ckpool views, plus a wallet
+A one-click Umbrel app (node, ckpool mining server and web pages): node, dashboard, mempool and ckpool views, plus a wallet
 with short public on-chain messages (OP_RETURN, 280 characters) and a document timestamping page (SHA-256 fingerprint computed in the
 browser, only the hash goes on-chain).
 P2P port **9333**; never expose the RPC port. Genesis hash:
