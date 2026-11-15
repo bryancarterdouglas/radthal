@@ -85,6 +85,8 @@ and a service that runs the node in the background, including at boot.
 2. In a terminal: `cd ~/Downloads && sudo apt install ./radthal_*_all.deb`
 3. Open **Radthal** from the applications menu.
 
+This application runs the node and its pages (Node, Dashboard, Mempool, Wallet, Timestamping). The **ckpool** mining server is not part of it yet: to mine, follow **[MINER.en.md](MINER.en.md)** or use the Umbrel app.
+
 Docker is required: if it is missing, the application offers to install it. The first start downloads the ready-made node (a few
 minutes, nothing to compile). Tested on a recent Ubuntu release; other distributions are untested. Your data (chain, wallet) lives in the
 Docker volume `radthal_radthal-data`, the same one the installation below uses: if you already ran the node with `git clone`, stop it

@@ -85,6 +85,8 @@ sans navigateur) et un service qui fait tourner le nœud en arrière-plan, y com
 2. Dans un terminal : `cd ~/Téléchargements && sudo apt install ./radthal_*_all.deb`
 3. Ouvre **Radthal** dans le menu des applications.
 
+Cette application lance le nœud et ses pages (Nœud, Tableau de bord, Mempool, Portefeuille, Horodatage). Le serveur de minage **ckpool** n'en fait pas encore partie : pour miner, suis **[MINER.md](MINER.md)** ou utilise l'application Umbrel.
+
 Docker est nécessaire : s'il manque, l'application propose de l'installer. Le premier démarrage télécharge le nœud tout fait (quelques
 minutes, sans rien compiler). Testé sur une version récente d'Ubuntu ; les autres distributions ne sont pas testées. Tes données (chaîne,
 portefeuille) sont dans le volume Docker `radthal_radthal-data`, le même que pour l'installation ci-dessous : si tu avais déjà lancé le
