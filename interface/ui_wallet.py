@@ -61,6 +61,7 @@ _seed = os.environ.get("SEED_NODE", "").rsplit(":", 1)[0].strip().lower()
 if _seed:
     PEER_NAMES.setdefault(_seed, "nœud de départ")
 import hashlib as _hashlib
+import ipaddress as _ipaddress
 _PEER_SALT = os.urandom(8).hex()                                    # change a chaque demarrage : le pseudo ne permet pas de retrouver l'adresse
 _ANIMALS = ["Renard", "Loup", "Lynx", "Hibou", "Castor", "Blaireau", "Chamois", "Marmotte",
             "Aigle", "Cerf", "Ours", "Faucon", "Sanglier", "Héron", "Loutre", "Belette"]
@@ -81,6 +82,28 @@ def peer_addr(a):
         return "cet appareil"                                       # un programme de ta machine (mineur, page web...)
     h = _hashlib.sha256((_PEER_SALT + host).encode()).digest()
     return "%s-%02d" % (_ANIMALS[h[0] % len(_ANIMALS)], h[1] % 100)
+
+
+def peer_zone(p):
+    """D'ou vient ce pair, en clair (cet appareil, le reseau de ta maison, internet, Tor) : on ne montre jamais son adresse.
+    Une adresse privee (192.168.x.x, 10.x.x.x...) est un appareil relie a ta box ; un nom (le noeud de depart) ou une adresse publique vient d'internet."""
+    net = str(p.get("network") or "").lower()
+    if net == "onion":
+        return "Tor"
+    if net == "i2p":
+        return "I2P"
+    a = str(p.get("addr") or "")
+    m = re.fullmatch(r"\[([^\]]+)\](?::\d+)?", a)
+    host = (m.group(1) if m else (a.rsplit(":", 1)[0] if a.count(":") == 1 else a)).lower().split("%")[0]
+    try:
+        ip = _ipaddress.ip_address(host)
+    except ValueError:
+        return "internet"
+    if ip.is_loopback:
+        return "cet appareil"
+    if ip.is_private or ip.is_link_local:
+        return "réseau de ta maison"
+    return "réseau privé" if not ip.is_global else "internet"
 LOGS = os.environ.get("LOGS", "/ckpool/logs")
 PORT = int(os.environ.get("PORT", "8000"))
 WALLET = os.environ.get("WALLET", "minage")
@@ -487,10 +510,13 @@ def view_node():
     ]))
     if warn:
         secs.append(note("warn", "Avertissement du nœud : " + str(warn), "warn"))
-    secs.append(table("peers", "Pairs connectés", ["Adresse", "Version", "Sens", "Reçu", "Envoyé", "Connecté depuis"], [
-        [peer_addr(p.get("addr")), str(p.get("subver", "")).strip("/"), "entrant" if p.get("inbound") else "sortant",
+    secs.append(table("peers", "Pairs connectés", ["Adresse", "Origine", "Version", "Sens", "Reçu", "Envoyé", "Connecté depuis"], [
+        [peer_addr(p.get("addr")), peer_zone(p), str(p.get("subver", "")).strip("/"), "entrant" if p.get("inbound") else "sortant",
          fsize(p.get("bytesrecv")), fsize(p.get("bytessent")), {"age": p.get("conntime")}]
         for p in peers], "Aucun pair connecté pour l'instant."))
+    if any(peer_zone(p) == "réseau de ta maison" for p in peers):
+        secs.append(note("peers-hint", "« Réseau de ta maison » : un appareil relié à ta box, comme ton PC ou ton Pi. "
+                         "Certaines box font aussi passer un visiteur d'internet sous cette adresse."))
     secs.append(kv("ports", "Ports", ports_rows()))
     return secs, info
 
