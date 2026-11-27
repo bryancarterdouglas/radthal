@@ -274,6 +274,23 @@ Par défaut ton nœud se connecte aux autres, mais personne ne peut se connecter
 le port **TCP 9333** de ta box vers ta machine. N'ouvre **que** ce port : jamais le RPC (8332 par défaut), qui donne accès au
 portefeuille. Ouvrir le port rend ton adresse IP visible aux autres nœuds.
 
+**Comment les nœuds se trouvent.** Un nœud Bitcoin ouvre une dizaine de connexions vers d'autres nœuds, choisis dans une liste
+d'adresses. Cette liste vient de serveurs DNS et d'adresses écrites dans le programme, puis des voisins eux-mêmes, qui s'échangent
+les adresses qu'ils connaissent. Seuls les nœuds dont le port est ouvert y figurent : les autres (la majorité, derrière une box)
+ne font que se connecter vers eux.
+
+**Où en est Radthal.** Radthal n'a ni serveur DNS ni liste intégrée (`-dnsseed=0`, `-fixedseeds=0`), et pour l'instant un seul nœud
+a son port ouvert : celui du créateur, le « nœud de départ » (`radthal-seed.duckdns.org:9333`). La liste ne contient donc qu'une
+adresse et tous les nœuds se connectent à celui-là : le réseau forme une **étoile**. Les blocs circulent bien (le nœud de départ les
+relaie à tout le monde), mais deux nœuds ne se voient pas directement, et si le nœud de départ s'éteint, les autres ne se trouvent
+plus. Ce n'est pas une limite du programme : les règles sont celles de Bitcoin (125 connexions au plus, dont une dizaine que le
+nœud ouvre lui-même).
+
+**Comment aider.** Si tu ouvres le port 9333, ton nœud peut devenir un deuxième point d'entrée : les nouveaux nœuds apprennent
+son adresse par le nœud de départ et s'y connectent directement. Ce fonctionnement n'est pas encore éprouvé sur Radthal ; on le
+vérifiera avec le premier nœud ouvert qui se présentera. Si tu en fais tourner un, ouvre une « issue » (voir « Nœuds connus ») :
+on l'ajoute à la liste, ce qui sert de nœud de départ de secours.
+
 ## Miner
 
 Radthal utilise SHA-256, comme Bitcoin : un mineur ASIC pour Bitcoin convient. Plus il y a de mineurs honnêtes, plus la chaîne est

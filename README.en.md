@@ -272,6 +272,20 @@ By default your node connects to the others, but nobody can connect to it. To st
 your router to your machine. Open **only** this port: never the RPC (8332 by default), which gives access to the wallet. Opening
 the port makes your IP address visible to other nodes.
 
+**How nodes find each other.** A Bitcoin node opens about ten connections to other nodes chosen from a list of addresses. That list
+comes from DNS servers and addresses written into the program, then from the neighbours themselves, which swap the addresses they
+know. Only nodes with an open port are on it: the others (most of them, behind a router) only connect out to them.
+
+**Where Radthal stands.** Radthal has no DNS server and no built-in list (`-dnsseed=0`, `-fixedseeds=0`), and for now only one node
+has its port open: the creator's, the "starter node" (`radthal-seed.duckdns.org:9333`). The list therefore holds a single address
+and every node connects to that one: the network is a **star**. Blocks travel fine (the starter node relays them to everyone), but
+two nodes do not see each other directly, and if the starter node goes offline the others can no longer find each other. This is
+not a limit of the program: the rules are Bitcoin's (at most 125 connections, about ten of which the node opens itself).
+
+**How to help.** If you open port 9333, your node can become a second entry point: new nodes learn its address from the starter
+node and connect to it directly. This has not been proven on Radthal yet; it will be checked with the first open node that shows up.
+If you run one, open an "issue" (see "Known nodes"): it will be added to the list as a backup starter node.
+
 ## Mining
 
 Radthal uses SHA-256, like Bitcoin: a Bitcoin ASIC miner works. The more honest miners there are, the harder the chain is to
