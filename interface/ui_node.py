@@ -194,13 +194,56 @@ def _slim(t):
             "blockheight": t.get("blockheight")}
 
 
+def _top_addr(cb):
+    """Adresse qui touche la plus grosse sortie de la coinbase : c'est la part du MINEUR (98 % ou 100 %).
+    Apres le bloc 25 000, une petite part (2 %) va au createur : elle ne fait pas de lui le mineur du bloc."""
+    best_v, best_a = None, None
+    for o in cb.get("vout", []):
+        a = (o.get("scriptPubKey") or {}).get("address")
+        v = o.get("value") or 0
+        if a and (best_v is None or v > best_v):
+            best_v, best_a = v, a
+    return best_a
+
+
+_CB_OK = {}      # hash du bloc -> True si la part du mineur est a toi (un bloc ne change pas : on garde la reponse)
+
+
+def check_blocks(txs):
+    """Pour chaque bloc ou ton portefeuille touche la coinbase, verifie que c'est la part du MINEUR et pas seulement celle du createur."""
+    need = {}
+    for t in txs:
+        bh = t.get("blockhash")
+        if bh and bh not in _CB_OK and t.get("txid") and t.get("category") in ("generate", "immature"):
+            need[bh] = t["txid"]
+    keys = list(need)
+    for i in range(0, len(keys), 50):
+        part = keys[i:i + 50]
+        cbs = rpc_batch([("getrawtransaction", [need[b], True, b]) for b in part])
+        if not cbs or None in cbs:
+            return
+        tops = [_top_addr(cb) for cb in cbs]
+        todo = sorted({a for a in tops if a})
+        res = rpc_batch([("getaddressinfo", [a]) for a in todo], wallet=WALLET) if todo else []
+        if res is None or None in res:
+            return
+        mine = {a for a, r in zip(todo, res) if r.get("ismine")}
+        for b, a in zip(part, tops):
+            _CB_OK[b] = bool(a and a in mine)
+
+
 def _wallet_apply(txs, mined):
     for t in txs:
         bh = t.get("blockhash")
         if not bh:
             continue
         if t.get("category") in ("generate", "immature"):
-            mined[bh] = _slim(t)
+            if _CB_OK.get(bh):
+                new, old = _slim(t), mined.get(bh)
+                if old is None or (new.get("amount") or 0) >= (old.get("amount") or 0):    # la part du mineur, pas celle du createur
+                    mined[bh] = new
+            elif bh in _CB_OK:
+                mined.pop(bh, None)                     # ton portefeuille touche ce bloc (part du createur) mais le mineur, c'est un autre
         elif t.get("category") == "orphan":
             mined.pop(bh, None)
 
@@ -222,20 +265,19 @@ def chain_scan(tip, step=200):
         cbs = rpc_batch([("getrawtransaction", [b["tx"][0], True, b["hash"]]) for b in blocks])
         if not cbs or None in cbs:
             return None
+        tops = [_top_addr(cb) for cb in cbs]               # la part du mineur de chaque bloc (pas celle du createur)
         todo = []
-        for cb in cbs:
-            for o in cb.get("vout", []):
-                a = (o.get("scriptPubKey") or {}).get("address")
-                if a and a not in known and a not in todo:
-                    todo.append(a)
+        for a in tops:
+            if a and a not in known and a not in todo:
+                todo.append(a)
         if todo:
             res = rpc_batch([("getaddressinfo", [a]) for a in todo], wallet=WALLET)
             if res is None or None in res:              # portefeuille absent ou noeud occupe : on recommencera plus tard
                 return None
             for a, r in zip(todo, res):
                 known[a] = bool(r and r.get("ismine"))
-        for h, bh, cb in zip(hs, hashes, cbs):
-            if any(known.get((o.get("scriptPubKey") or {}).get("address")) for o in cb.get("vout", [])):
+        for h, bh, a in zip(hs, hashes, tops):
+            if a and known.get(a):
                 found[bh] = {"blockhash": bh, "amount": None, "confirmations": tip - h + 1, "blockheight": h}
         time.sleep(0.02)                                # laisse respirer le noeud
     return found
@@ -247,6 +289,10 @@ def wallet_refresh():
     txs = rpc("listtransactions", ["*", 200, 0], wallet=WALLET)
     if txs is None:
         return
+    try:
+        check_blocks(txs)
+    except Exception:
+        pass
     with _W_LOCK:
         _wallet_apply(txs, _W["mined"])
         _W["light"] = True
@@ -729,7 +775,11 @@ def _flag_mine(rows):
         for e in r["ins"] + r["outs"]:
             if e.get("addr") in mine:
                 e["mine"] = True
-        r["mine"] = any(e.get("mine") for e in r["outs"])
+        if r.get("cb"):            # coinbase : le bloc est a toi seulement si la plus grosse sortie (part du mineur) est a toi
+            top = max((e for e in r["outs"] if e.get("addr")), key=lambda e: e.get("v") or 0, default=None)
+            r["mine"] = bool(top and top.get("mine"))
+        else:
+            r["mine"] = any(e.get("mine") for e in r["outs"])
     return mine
 
 
